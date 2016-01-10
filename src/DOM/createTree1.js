@@ -1,0 +1,1 @@
+const { TEXT, NODE,  ATTRS, CHILDREN } = dynamicFlags;

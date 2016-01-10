@@ -16,7 +16,7 @@ export default function createRootNodeWithStaticChild(templateNode, dynamicAttrs
 					return domNode;
 				}
 			}
-			domNode = templateNode.cloneNode(true);
+			domNode = templateNode.node.cloneNode(true);
 			if (dynamicAttrs) {
 				addDOMDynamicAttributes(item, domNode, dynamicAttrs, node);
 			}

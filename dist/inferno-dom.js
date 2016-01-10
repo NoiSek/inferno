@@ -1,5 +1,5 @@
 /*!
- * inferno-dom vundefined
+ * inferno-dom v0.4.5
  * (c) 2016 Dominic Gannaway
  * Released under the MPL-2.0 License.
  */
@@ -66,6 +66,10 @@
   	return recyclingEnabled$1;
   }
 
+  var isArray = (function (x) {
+    return x.constructor === Array;
+  })
+
   var isVoid = (function (x) {
     return x === null || x === undefined;
   })
@@ -73,92 +77,6 @@
   var isStringOrNumber = (function (x) {
     return typeof x === 'string' || typeof x === 'number';
   })
-
-  // To be compat with React, we support at least the same SVG elements
-  function isSVGElement(nodeName) {
-  	return nodeName === 'svg' || nodeName === 'clipPath' || nodeName === 'circle' || nodeName === 'defs' || nodeName === 'desc' || nodeName === 'ellipse' || nodeName === 'filter' || nodeName === 'g' || nodeName === 'line' || nodeName === 'linearGradient' || nodeName === 'mask' || nodeName === 'marker' || nodeName === 'metadata' || nodeName === 'mpath' || nodeName === 'path' || nodeName === 'pattern' || nodeName === 'polygon' || nodeName === 'polyline' || nodeName === 'pattern' || nodeName === 'radialGradient' || nodeName === 'rect' || nodeName === 'set' || nodeName === 'stop' || nodeName === 'symbol' || nodeName === 'switch' || nodeName === 'text' || nodeName === 'tspan' || nodeName === 'use' || nodeName === 'view';
-  }
-
-  function isMathMLElement(nodeName) {
-  	return nodeName === 'mo' || nodeName === 'mover' || nodeName === 'mn' || nodeName === 'maction' || nodeName === 'menclose' || nodeName === 'merror' || nodeName === 'mfrac' || nodeName === 'mi' || nodeName === 'mmultiscripts' || nodeName === 'mpadded' || nodeName === 'mphantom' || nodeName === 'mroot' || nodeName === 'mrow' || nodeName === 'ms' || nodeName === 'mtd' || nodeName === 'mtable' || nodeName === 'munder' || nodeName === 'msub' || nodeName === 'msup' || nodeName === 'msubsup' || nodeName === 'mtr' || nodeName === 'mtext';
-  }
-
-  var isArray = (function (x) {
-    return x.constructor === Array;
-  })
-
-  var ObjectTypes = {
-  	VARIABLE: 1
-  };
-
-  var ValueTypes = {
-  	TEXT: 0,
-  	ARRAY: 1,
-  	TREE: 2,
-  	EMPTY_OBJECT: 3,
-  	FUNCTION: 4,
-  	FRAGMENT: 5
-  };
-
-  function getValueWithIndex(item, index) {
-  	return index < 2 ? index === 0 ? item.v0 : item.v1 : item.values[index - 2];
-  }
-
-  function getTypeFromValue(value) {
-
-  	if (isStringOrNumber(value) || isVoid(value)) {
-  		return ValueTypes.TEXT;
-  	} else if (isArray(value)) {
-  		return ValueTypes.ARRAY;
-  	} else if ((typeof value === 'undefined' ? 'undefined' : babelHelpers_typeof(value)) === 'object' && value.create) {
-  		return ValueTypes.TREE;
-  	} else if ((typeof value === 'undefined' ? 'undefined' : babelHelpers_typeof(value)) === 'object' && value.tree.dom) {
-  		return ValueTypes.FRAGMENT;
-  	} else if ((typeof value === 'undefined' ? 'undefined' : babelHelpers_typeof(value)) === 'object' && Object.keys(value).length === 0) {
-  		return ValueTypes.EMPTY_OBJECT;
-  	} else if (typeof value === 'function') {
-  		return ValueTypes.FUNCTION;
-  	}
-  }
-
-  function getValueForProps(props, item) {
-  	var newProps = {};
-
-  	if (props.index) {
-  		return getValueWithIndex(item, props.index);
-  	}
-  	for (var name in props) {
-  		var val = props[name];
-
-  		if (val && val.index) {
-  			newProps[name] = getValueWithIndex(item, val.index);
-  		} else {
-  			newProps[name] = val;
-  		}
-
-  		if (name === 'children') {
-  			newProps[name].overrideItem = item;
-  		}
-  	}
-  	return newProps;
-  }
-
-  function removeValueTree(value, treeLifecycle) {
-  	if (isVoid(value)) {
-  		return;
-  	}
-  	if (isArray(value)) {
-  		for (var i = 0; i < value.length; i++) {
-  			var child = value[i];
-
-  			removeValueTree(child, treeLifecycle);
-  		}
-  	} else if ((typeof value === 'undefined' ? 'undefined' : babelHelpers_typeof(value)) === 'object') {
-  		var tree = value.tree;
-
-  		tree.dom.remove(value, treeLifecycle);
-  	}
-  }
 
   var canUseDOM = !!(typeof window !== 'undefined' &&
   // Nwjs doesn't add document as a global in their node context, but does have it on window.document,
@@ -1396,6 +1314,79 @@
   	}
   }
 
+  var ObjectTypes = {
+  	VARIABLE: 1
+  };
+
+  var ValueTypes = {
+  	TEXT: 0,
+  	ARRAY: 1,
+  	TREE: 2,
+  	EMPTY_OBJECT: 3,
+  	FUNCTION: 4,
+  	FRAGMENT: 5
+  };
+
+  function getValueWithIndex(item, index) {
+  	return index < 2 ? index === 0 ? item.v0 : item.v1 : item.values[index - 2];
+  }
+
+  function getTypeFromValue(value) {
+
+  	if (isStringOrNumber(value) || isVoid(value)) {
+  		return ValueTypes.TEXT;
+  	} else if (isArray(value)) {
+  		return ValueTypes.ARRAY;
+  	} else if ((typeof value === 'undefined' ? 'undefined' : babelHelpers_typeof(value)) === 'object' && value.create) {
+  		return ValueTypes.TREE;
+  	} else if ((typeof value === 'undefined' ? 'undefined' : babelHelpers_typeof(value)) === 'object' && value.tree.dom) {
+  		return ValueTypes.FRAGMENT;
+  	} else if ((typeof value === 'undefined' ? 'undefined' : babelHelpers_typeof(value)) === 'object' && Object.keys(value).length === 0) {
+  		return ValueTypes.EMPTY_OBJECT;
+  	} else if (typeof value === 'function') {
+  		return ValueTypes.FUNCTION;
+  	}
+  }
+
+  function getValueForProps(props, item) {
+  	var newProps = {};
+
+  	if (props.index) {
+  		return getValueWithIndex(item, props.index);
+  	}
+  	for (var name in props) {
+  		var val = props[name];
+
+  		if (val && val.index) {
+  			newProps[name] = getValueWithIndex(item, val.index);
+  		} else {
+  			newProps[name] = val;
+  		}
+
+  		if (name === 'children') {
+  			newProps[name].overrideItem = item;
+  		}
+  	}
+  	return newProps;
+  }
+
+  function removeValueTree(value, treeLifecycle) {
+  	if (isVoid(value)) {
+  		return;
+  	}
+  	if (isArray(value)) {
+  		for (var i = 0; i < value.length; i++) {
+  			var child = value[i];
+
+  			removeValueTree(child, treeLifecycle);
+  		}
+  	} else if ((typeof value === 'undefined' ? 'undefined' : babelHelpers_typeof(value)) === 'object') {
+  		var tree = value.tree;
+
+  		tree.dom.remove(value, treeLifecycle);
+  	}
+  }
+
   /**
    * Set HTML attributes on the template
    * @param{ HTMLElement } node
@@ -1607,7 +1598,81 @@
   	return domNode;
   }
 
-  function createRootNodeWithDynamicText(templateNode, valueIndex, dynamicAttrs, recyclingEnabled) {
+  function canHydrate(domNode, nextDomNode) {
+  	if (nextDomNode) {
+  		if (nextDomNode.hasAttribute('data-inferno')) {
+  			return true;
+  		} else {
+  			// otherwise clear the DOM node
+  			domNode.innerHTML = '';
+  		}
+  	}
+  }
+
+  function purgeCommentNodes(domNode, parentDom) {
+  	var nextSibling = domNode.nextSibling;
+
+  	if (nextSibling && nextSibling.nodeType === 8) {
+  		nextSibling = purgeCommentNodes(nextSibling, parentDom);
+  		parentDom.removeChild(nextSibling);
+  	}
+
+  	return nextSibling;
+  }
+
+  function validateHydrateNodeChildren(hydrateNode, templateNode) {
+  	var templateNodeChild = templateNode.firstChild;
+  	var hydrateNodeChild = hydrateNode.firstChild;
+
+  	while (templateNodeChild) {
+  		var result = validateHydrateNode(hydrateNodeChild, templateNodeChild);
+  		if (!result) {
+  			return false;
+  		}
+  		templateNodeChild = templateNodeChild.nextSibling;
+  		// check when we reach a comment and remove it, as they are used to break up text nodes
+  		hydrateNodeChild = purgeCommentNodes(hydrateNodeChild, hydrateNode);
+  	}
+  	return true;
+  }
+
+  function validateHydrateNode(hydrateNode, templateNode, item, dynamicAttrs) {
+  	// check nodeNames, return false if not same
+  	if (hydrateNode.nodeName !== templateNode.nodeName) {
+  		return false;
+  	}
+  	if (hydrateNode.nodeType === 1) {
+  		// check hydrateNode has all the same attrs as templateNode (as these will be static)
+  		// return false if not same
+  		// TODO
+
+  		// check hydrateNode has all the same attrs as dynamicAttrs+item (as these will be dyanmic),
+  		// passively update here and do not return false (as state could have changed) if not same
+  		if (dynamicAttrs && item) {}
+  		// TODO
+
+  		// check through children
+  		return validateHydrateNodeChildren(hydrateNode, templateNode);
+  	} else if (hydrateNode.nodeType === 3) {
+  		return hydrateNode.nodeValue === templateNode.nodeValue;
+  	}
+  }
+
+  var ROOT_STATIC_CHILD = 0x1;
+  var ROOT_STATIC_NODE = 0x2;
+  var ROOT_VOID_NODE = 0x3;
+  var ROOT_WITH_DYNAMIC_TEXT = 0x4;
+  var ROOT_DYNAMIC_TEXT = 0x5;
+  var ROOT_DYNAMIC_CHILD = 0x6;
+
+  var STATIC_NODE = 0x7;
+  var VOID_NODE = 0x8;
+
+  var DYNAMIC_TEXT_NODE = 0x9;
+  var DYNAMIC_CHILD_NODE = 0x10;
+
+  function createRootNodes(templateNode, dynamicAttrs, recyclingEnabled) {
+
   	var node = {
   		pool: [],
   		keyedPool: [],
@@ -1621,163 +1686,19 @@
   					return domNode;
   				}
   			}
-  			domNode = templateNode.cloneNode(false);
-  			var value = getValueWithIndex(item, valueIndex);
-
-  			if (!isVoid(value)) {
-  				if ("development" !== 'production') {
-  					if (!isStringOrNumber(value)) {
-  						throw Error('Inferno Error: Template nodes with TEXT must only have a StringLiteral or NumericLiteral as a value, this is intended for low-level optimisation purposes.');
-  					}
-  				}
-  				if (value === '') {
-  					domNode.appendChild(document.createTextNode(''));
-  				} else {
-  					domNode.textContent = value;
-  				}
-  			}
-  			if (dynamicAttrs) {
-  				addDOMDynamicAttributes(item, domNode, dynamicAttrs, node);
-  			}
+  			domNode = templateNode.node.cloneNode(true);
   			item.rootNode = domNode;
-  			return domNode;
-  		},
-  		update: function update(lastItem, nextItem, treeLifecycle) {
-  			if (node !== lastItem.tree.dom) {
-  				recreateRootNode(lastItem, nextItem, node, treeLifecycle);
-  			} else {
-  				var domNode = lastItem.rootNode;
 
-  				nextItem.id = lastItem.id;
-  				nextItem.rootNode = domNode;
-  				var nextValue = getValueWithIndex(nextItem, valueIndex);
-  				var lastValue = getValueWithIndex(lastItem, valueIndex);
+  			switch (templateNode.type) {
 
-  				if (nextValue !== lastValue) {
-  					if (isVoid(nextValue)) {
-  						if (isVoid(lastValue)) {
-  							domNode.firstChild.nodeValue = '';
-  						} else {
-  							domNode.textContent = '';
-  						}
-  					} else {
-  						if ("development" !== 'production') {
-  							if (!isStringOrNumber(nextValue)) {
-  								throw Error('Inferno Error: Template nodes with TEXT must only have a StringLiteral or NumericLiteral as a value, this is intended for low-level optimisation purposes.');
-  							}
-  						}
+  				case ROOT_STATIC_CHILD:
+  				case ROOT_VOID_NODE:
 
-  						if (isVoid(lastValue)) {
-  							domNode.textContent = nextValue;
-  						} else {
-  							domNode.firstChild.nodeValue = nextValue;
-  						}
+  					if (dynamicAttrs) {
+  						addDOMDynamicAttributes(item, domNode, dynamicAttrs, node);
   					}
-  				}
-
-  				if (!isVoid(dynamicAttrs)) {
-  					updateDOMDynamicAttributes(lastItem, nextItem, domNode, dynamicAttrs);
-  				}
+  					break;
   			}
-  		},
-  		remove: function remove(item) {
-  			if (dynamicAttrs) {
-  				clearListeners(item, item.rootNode, dynamicAttrs);
-  			}
-  		}
-  	};
-
-  	return node;
-  }
-
-  var errorMsg = 'Inferno Error: Template nodes with TEXT must only have a StringLiteral or NumericLiteral as a value, this is intended for low-level optimisation purposes.';
-
-  function createNodeWithDynamicText(templateNode, valueIndex, dynamicAttrs) {
-  	var domNodeMap = {};
-  	var node = {
-  		overrideItem: null,
-  		create: function create(item) {
-  			var domNode = templateNode.cloneNode(false);
-  			var value = getValueWithIndex(item, valueIndex);
-
-  			if (!isVoid(value)) {
-  				if ("development" !== 'production') {
-  					if (!isStringOrNumber(value)) {
-  						throw Error(errorMsg);
-  					}
-  				}
-  				if (value === '') {
-  					domNode.appendChild(document.createTextNode(''));
-  				} else {
-  					domNode.textContent = value;
-  				}
-  			}
-  			if (dynamicAttrs) {
-  				addDOMDynamicAttributes(item, domNode, dynamicAttrs, null);
-  			}
-  			domNodeMap[item.id] = domNode;
-  			return domNode;
-  		},
-  		update: function update(lastItem, nextItem) {
-  			var domNode = domNodeMap[lastItem.id];
-  			var nextValue = getValueWithIndex(nextItem, valueIndex);
-  			var lastValue = getValueWithIndex(lastItem, valueIndex);
-
-  			if (nextValue !== lastValue) {
-  				if (isVoid(nextValue)) {
-  					if (isVoid(lastValue)) {
-  						domNode.firstChild.nodeValue = '';
-  					} else {
-  						domNode.textContent = '';
-  					}
-  				} else {
-  					if ("development" !== 'production') {
-  						if (!isStringOrNumber(nextValue)) {
-  							throw Error(errorMsg);
-  						}
-  					}
-  					if (isVoid(lastValue)) {
-  						domNode.textContent = nextValue;
-  					} else {
-  						domNode.firstChild.nodeValue = nextValue;
-  					}
-  				}
-  			}
-  			if (dynamicAttrs) {
-  				updateDOMDynamicAttributes(lastItem, nextItem, domNode, dynamicAttrs);
-  			}
-  		},
-  		remove: function remove(item) {
-  			var domNode = domNodeMap[item.id];
-
-  			if (dynamicAttrs) {
-  				clearListeners(item, domNode, dynamicAttrs);
-  			}
-  		}
-  	};
-
-  	return node;
-  }
-
-  function createRootNodeWithStaticChild(templateNode, dynamicAttrs, recyclingEnabled) {
-  	var node = {
-  		pool: [],
-  		keyedPool: [],
-  		overrideItem: null,
-  		create: function create(item) {
-  			var domNode = undefined;
-
-  			if (recyclingEnabled) {
-  				domNode = recycle(node, item);
-  				if (domNode) {
-  					return domNode;
-  				}
-  			}
-  			domNode = templateNode.cloneNode(true);
-  			if (dynamicAttrs) {
-  				addDOMDynamicAttributes(item, domNode, dynamicAttrs, node);
-  			}
-  			item.rootNode = domNode;
   			return domNode;
   		},
   		update: function update(lastItem, nextItem, treeLifecycle) {
@@ -1785,49 +1706,49 @@
   				recreateRootNode(lastItem, nextItem, node, treeLifecycle);
   				return;
   			}
-  			var domNode = lastItem.rootNode;
 
-  			nextItem.rootNode = domNode;
-  			nextItem.id = lastItem.id;
-  			if (dynamicAttrs) {
-  				updateDOMDynamicAttributes(lastItem, nextItem, domNode, dynamicAttrs);
+  			switch (templateNode.type) {
+
+  				case ROOT_VOID_NODE:
+  				case ROOT_STATIC_CHILD:
+  					var domNode = lastItem.rootNode;
+
+  					nextItem.rootNode = domNode;
+  					nextItem.id = lastItem.id;
+  					if (dynamicAttrs) {
+  						updateDOMDynamicAttributes(lastItem, nextItem, domNode, dynamicAttrs);
+  					}
+  					break;
+  				case ROOT_STATIC_NODE:
+
+  					nextItem.rootNode = lastItem.rootNode;
+  					break;
   			}
   		},
   		remove: function remove(item) {
-  			if (dynamicAttrs) {
-  				clearListeners(item, item.rootNode, dynamicAttrs);
-  			}
-  		}
-  	};
 
-  	return node;
-  }
+  			switch (templateNode.type) {
+  				case ROOT_STATIC_CHILD:
+  					break;
+  				case ROOT_VOID_NODE:
 
-  function createNodeWithStaticChild(templateNode, dynamicAttrs) {
-  	var domNodeMap = {};
-  	var node = {
-  		overrideItem: null,
-  		create: function create(item) {
-  			var domNode = templateNode.cloneNode(true);
-
-  			if (dynamicAttrs) {
-  				addDOMDynamicAttributes(item, domNode, dynamicAttrs, null);
-  			}
-  			domNodeMap[item.id] = domNode;
-  			return domNode;
-  		},
-  		update: function update(lastItem, nextItem) {
-  			var domNode = domNodeMap[lastItem.id];
-
-  			if (dynamicAttrs) {
-  				updateDOMDynamicAttributes(lastItem, nextItem, domNode, dynamicAttrs);
+  					if (dynamicAttrs) {
+  						clearListeners(item, item.rootNode, dynamicAttrs);
+  					}
+  					break;
   			}
   		},
-  		remove: function remove(item) {
-  			var domNode = domNodeMap[item.id];
+  		hydrate: function hydrate(hydrateNode, item) {
+  			switch (templateNode.type) {
+  				case ROOT_STATIC_NODE:
 
-  			if (dynamicAttrs) {
-  				clearListeners(item, domNode, dynamicAttrs);
+  					if (!validateHydrateNode(hydrateNode, templateNode.node, item)) {
+  						recreateRootNodeFromHydration(hydrateNode, item, node);
+  						return;
+  					}
+  					item.rootNode = hydrateNode;
+
+  					break;
   			}
   		}
   	};
@@ -2177,7 +2098,7 @@
   	}
   }
 
-  function createRootNodeWithDynamicChild(templateNode, valueIndex, dynamicAttrs, recyclingEnabled) {
+  function createDynamicRootNode(templateNode, valueIndex, dynamicAttrs, recyclingEnabled) {
   	var keyedChildren = true;
   	var childNodeList = [];
   	var node = {
@@ -2188,142 +2109,225 @@
   			var domNode = undefined;
 
   			if (recyclingEnabled) {
-  				domNode = recycle(node, item, treeLifecycle, context);
+  				domNode = recycle(node, item);
   				if (domNode) {
   					return domNode;
   				}
   			}
-  			domNode = templateNode.cloneNode(false);
+
+  			domNode = templateNode.node.cloneNode(false);
 
   			var value = getValueWithIndex(item, valueIndex);
 
-  			if (!isVoid(value)) {
-  				if (isArray(value)) {
-  					for (var i = 0; i < value.length; i++) {
-  						var childItem = value[i];
-  						// catches edge case where we e.g. have [null, null, null] as a starting point
-  						if (!isVoid(childItem) && (typeof childItem === 'undefined' ? 'undefined' : babelHelpers_typeof(childItem)) === 'object') {
-  							var tree = childItem && childItem.tree;
+  			switch (templateNode.type) {
 
-  							if (tree) {
-  								var childNode = childItem.tree.dom.create(childItem, treeLifecycle, context);
-
-  								if (childItem.key === undefined) {
-  									keyedChildren = false;
-  								}
-  								childNodeList.push(childNode);
-  								domNode.appendChild(childNode);
-  							}
-  						} else if (isStringOrNumber(childItem)) {
-  							var textNode = document.createTextNode(childItem);
-
-  							domNode.appendChild(textNode);
-  							childNodeList.push(textNode);
-  							keyedChildren = false;
+  				case ROOT_DYNAMIC_TEXT:
+  					if (!isVoid(value)) {
+  						if (isStringOrNumber(value)) {
+  							domNode.nodeValue = value;
   						}
   					}
-  				} else if ((typeof value === 'undefined' ? 'undefined' : babelHelpers_typeof(value)) === 'object') {
-  					var tree = value && value.tree;
+  					break;
+  				case ROOT_WITH_DYNAMIC_TEXT:
 
-  					if (tree) {
-  						domNode.appendChild(value.tree.dom.create(value, treeLifecycle, context));
+  					if (!isVoid(value)) {
+
+  						if (value === '') {
+  							domNode.appendChild(document.createTextNode(''));
+  						} else {
+  							domNode.textContent = value;
+  						}
   					}
-  				} else if (isStringOrNumber(value)) {
-  					domNode.textContent = value;
-  				}
+  					if (dynamicAttrs) {
+  						addDOMDynamicAttributes(item, domNode, dynamicAttrs, node);
+  					}
+
+  					break;
+
+  				case ROOT_DYNAMIC_CHILD:
+
+  					if (!isVoid(value)) {
+  						if (isArray(value)) {
+  							for (var i = 0; i < value.length; i++) {
+  								var childItem = value[i];
+  								// catches edge case where we e.g. have [null, null, null] as a starting point
+  								if (!isVoid(childItem) && (typeof childItem === 'undefined' ? 'undefined' : babelHelpers_typeof(childItem)) === 'object') {
+  									var tree = childItem && childItem.tree;
+
+  									if (tree) {
+  										var childNode = childItem.tree.dom.create(childItem, treeLifecycle, context);
+
+  										if (childItem.key === undefined) {
+  											keyedChildren = false;
+  										}
+  										childNodeList.push(childNode);
+  										domNode.appendChild(childNode);
+  									}
+  								} else if (isStringOrNumber(childItem)) {
+  									var textNode = document.createTextNode(childItem);
+
+  									domNode.appendChild(textNode);
+  									childNodeList.push(textNode);
+  									keyedChildren = false;
+  								}
+  							}
+  						} else if ((typeof value === 'undefined' ? 'undefined' : babelHelpers_typeof(value)) === 'object') {
+  							var tree = value && value.tree;
+
+  							if (tree) {
+  								domNode.appendChild(value.tree.dom.create(value, treeLifecycle, context));
+  							}
+  						} else if (isStringOrNumber(value)) {
+  							domNode.textContent = value;
+  						}
+  					}
+  					if (dynamicAttrs) {
+  						addDOMDynamicAttributes(item, domNode, dynamicAttrs, node);
+  					}
+
+  					break;
   			}
-  			if (dynamicAttrs) {
-  				addDOMDynamicAttributes(item, domNode, dynamicAttrs, node);
-  			}
+
   			item.rootNode = domNode;
   			return domNode;
   		},
   		update: function update(lastItem, nextItem, treeLifecycle, context) {
+
   			if (node !== lastItem.tree.dom) {
-  				childNodeList = [];
-  				recreateRootNode(lastItem, nextItem, node, treeLifecycle, context);
-  				return;
-  			}
-  			var domNode = lastItem.rootNode;
+  				recreateRootNode(lastItem, nextItem, node, treeLifecycle);
+  			} else {
 
-  			nextItem.rootNode = domNode;
-  			nextItem.id = lastItem.id;
-  			var nextValue = getValueWithIndex(nextItem, valueIndex);
-  			var lastValue = getValueWithIndex(lastItem, valueIndex);
+  				var domNode = lastItem.rootNode;
 
-  			if (nextValue && isVoid(lastValue)) {
-  				if ((typeof nextValue === 'undefined' ? 'undefined' : babelHelpers_typeof(nextValue)) === 'object') {
-  					if (isArray(nextValue)) {
-  						updateAndAppendDynamicChildren(domNode, nextValue);
-  					} else {
-  						recreateRootNode(lastItem, nextItem, node, treeLifecycle, context);
-  					}
-  				} else {
-  					domNode.appendChild(document.createTextNode(nextValue));
-  				}
-  			} else if (lastValue && isVoid(nextValue)) {
-  				if (isArray(lastValue)) {
-  					for (var i = 0; i < lastValue.length; i++) {
-  						if (!isVoid(domNode.childNodes[i])) {
-  							domNode.removeChild(domNode.childNodes[i]);
-  						} else {
-  							removeChild(domNode);
-  						}
-  					}
-  				} else {
-  					removeChild(domNode);
-  				}
-  			} else if (nextValue !== lastValue) {
-  				if (isStringOrNumber(nextValue)) {
-  					appendText(domNode, nextValue);
-  				} else if (isVoid(nextValue)) {
-  					if (domNode !== null) {
-  						replaceChild(domNode, document.createTextNode(''));
-  					}
-  					// if we update from undefined, we will have an array with zero length.
-  					// If we check if it's an array, it will throw 'x' is undefined.
-  				} else if (isArray(nextValue)) {
-  						if (isArray(lastValue)) {
-  							if (keyedChildren) {
-  								updateKeyed(nextValue, lastValue, domNode, null, treeLifecycle, context);
-  							} else {
-  								updateNonKeyed(nextValue, lastValue, childNodeList, domNode, null, treeLifecycle, context);
+  				nextItem.rootNode = domNode;
+  				nextItem.id = lastItem.id;
+
+  				var nextValue = getValueWithIndex(nextItem, valueIndex);
+  				var lastValue = getValueWithIndex(lastItem, valueIndex);
+
+  				switch (templateNode.type) {
+
+  					case ROOT_DYNAMIC_TEXT:
+
+  						if (nextValue !== lastValue) {
+  							if (isStringOrNumber(nextValue)) {
+  								domNode.nodeValue = nextValue;
   							}
-  						} else {
-  							updateNonKeyed(nextValue, [], childNodeList, domNode, null, treeLifecycle, context);
   						}
-  					} else if ((typeof nextValue === 'undefined' ? 'undefined' : babelHelpers_typeof(nextValue)) === 'object') {
-  						// Sometimes 'nextValue' can be an empty array or nothing at all, then it will
-  						// throw ': nextValue.tree is undefined'.
-  						var tree = nextValue && nextValue.tree;
-  						if (!isVoid(tree)) {
-  							if (!isVoid(lastValue)) {
-  								// If we update from 'null', there will be no 'tree', and the code will throw.
-  								var oldTree = lastValue && lastValue.tree;
+  						break;
 
-  								if (!isVoid(oldTree)) {
-  									tree.dom.update(lastValue, nextValue, treeLifecycle, context);
+  					case ROOT_WITH_DYNAMIC_TEXT:
+
+  						if (nextValue !== lastValue) {
+  							if (isVoid(nextValue)) {
+  								if (isVoid(lastValue)) {
+  									domNode.firstChild.nodeValue = '';
+  								} else {
+  									domNode.textContent = '';
+  								}
+  							} else {
+
+  								if (isVoid(lastValue)) {
+  									domNode.textContent = nextValue;
+  								} else {
+  									domNode.firstChild.nodeValue = nextValue;
+  								}
+  							}
+  						}
+
+  						if (!isVoid(dynamicAttrs)) {
+  							updateDOMDynamicAttributes(lastItem, nextItem, domNode, dynamicAttrs);
+  						}
+  						break;
+
+  					case ROOT_DYNAMIC_CHILD:
+  						if (nextValue && isVoid(lastValue)) {
+  							if ((typeof nextValue === 'undefined' ? 'undefined' : babelHelpers_typeof(nextValue)) === 'object') {
+  								if (isArray(nextValue)) {
+  									updateAndAppendDynamicChildren(domNode, nextValue);
   								} else {
   									recreateRootNode(lastItem, nextItem, node, treeLifecycle, context);
   								}
   							} else {
-  								replaceChild(domNode, tree.dom.create(nextValue, treeLifecycle, context));
+  								domNode.appendChild(document.createTextNode(nextValue));
   							}
-  						} else {
-  							// Edge case! If we update from e.g object literal - {} - from a existing value, the
-  							// value will not be unset
-  							removeChild(domNode);
+  						} else if (lastValue && isVoid(nextValue)) {
+  							if (isArray(lastValue)) {
+  								for (var i = 0; i < lastValue.length; i++) {
+  									if (!isVoid(domNode.childNodes[i])) {
+  										domNode.removeChild(domNode.childNodes[i]);
+  									} else {
+  										removeChild(domNode);
+  									}
+  								}
+  							} else {
+  								removeChild(domNode);
+  							}
+  						} else if (nextValue !== lastValue) {
+  							if (isStringOrNumber(nextValue)) {
+  								appendText(domNode, nextValue);
+  							} else if (isVoid(nextValue)) {
+  								if (domNode !== null) {
+  									replaceChild(domNode, document.createTextNode(''));
+  								}
+  								// if we update from undefined, we will have an array with zero length.
+  								// If we check if it's an array, it will throw 'x' is undefined.
+  							} else if (isArray(nextValue)) {
+  									if (isArray(lastValue)) {
+  										if (keyedChildren) {
+  											updateKeyed(nextValue, lastValue, domNode, null, treeLifecycle, context);
+  										} else {
+  											updateNonKeyed(nextValue, lastValue, childNodeList, domNode, null, treeLifecycle, context);
+  										}
+  									} else {
+  										updateNonKeyed(nextValue, [], childNodeList, domNode, null, treeLifecycle, context);
+  									}
+  								} else if ((typeof nextValue === 'undefined' ? 'undefined' : babelHelpers_typeof(nextValue)) === 'object') {
+  									// Sometimes 'nextValue' can be an empty array or nothing at all, then it will
+  									// throw ': nextValue.tree is undefined'.
+  									var tree = nextValue && nextValue.tree;
+  									if (!isVoid(tree)) {
+  										if (!isVoid(lastValue)) {
+  											// If we update from 'null', there will be no 'tree', and the code will throw.
+  											var oldTree = lastValue && lastValue.tree;
+
+  											if (!isVoid(oldTree)) {
+  												tree.dom.update(lastValue, nextValue, treeLifecycle, context);
+  											} else {
+  												recreateRootNode(lastItem, nextItem, node, treeLifecycle, context);
+  											}
+  										} else {
+  											replaceChild(domNode, tree.dom.create(nextValue, treeLifecycle, context));
+  										}
+  									} else {
+  										// Edge case! If we update from e.g object literal - {} - from a existing value, the
+  										// value will not be unset
+  										removeChild(domNode);
+  									}
+  								}
   						}
-  					}
-  			}
-  			if (dynamicAttrs) {
-  				updateDOMDynamicAttributes(lastItem, nextItem, domNode, dynamicAttrs);
+  						if (dynamicAttrs) {
+  							updateDOMDynamicAttributes(lastItem, nextItem, domNode, dynamicAttrs);
+  						}
+  						break;
+  				}
   			}
   		},
   		remove: function remove(item, treeLifecycle) {
-  			removeValueTree(getValueWithIndex(item, valueIndex), treeLifecycle);
-  			if (dynamicAttrs) {
-  				clearListeners(item, item.rootNode, dynamicAttrs);
+
+  			switch (templateNode.type) {
+  				case ROOT_WITH_DYNAMIC_TEXT:
+  					if (dynamicAttrs) {
+  						clearListeners(item, item.rootNode, dynamicAttrs);
+  					}
+
+  					break;
+  				case ROOT_DYNAMIC_CHILD:
+  					removeValueTree(getValueWithIndex(item, valueIndex), treeLifecycle);
+  					if (dynamicAttrs) {
+  						clearListeners(item, item.rootNode, dynamicAttrs);
+  					}
+  					break;
   			}
   		}
   	};
@@ -2338,139 +2342,183 @@
   	// TODO recycle old node
   }
 
-  function createNodeWithDynamicChild(templateNode, valueIndex, dynamicAttrs) {
+  function createNodeWithDynamicText(templateNode, valueIndex, dynamicAttrs) {
   	var keyedChildren = true;
   	var domNodeMap = {};
   	var childNodeList = [];
   	var node = {
   		overrideItem: null,
   		create: function create(item, treeLifecycle, context) {
-  			var domNode = templateNode.cloneNode(false);
+  			var domNode = templateNode.node.cloneNode(false);
   			var value = getValueWithIndex(item, valueIndex);
 
-  			if (!isVoid(value)) {
-  				if (isArray(value)) {
-  					for (var i = 0; i < value.length; i++) {
-  						var childItem = value[i];
-  						// catches edge case where we e.g. have [null, null, null] as a starting point
-  						if (!isVoid(childItem) && (typeof childItem === 'undefined' ? 'undefined' : babelHelpers_typeof(childItem)) === 'object') {
+  			switch (templateNode.type) {
+  				case DYNAMIC_TEXT_NODE:
+  					if (!isVoid(value)) {
 
-  							var tree = childItem && childItem.tree;
-
-  							if (tree) {
-  								var childNode = childItem.tree.dom.create(childItem, treeLifecycle, context);
-
-  								if (childItem.key === undefined) {
-  									keyedChildren = false;
-  								}
-  								childNodeList.push(childNode);
-  								domNode.appendChild(childNode);
-  							}
-  						} else if (isStringOrNumber(childItem)) {
-  							var textNode = document.createTextNode(childItem);
-
-  							domNode.appendChild(textNode);
-  							childNodeList.push(textNode);
-  							keyedChildren = false;
+  						if (value === '') {
+  							domNode.appendChild(document.createTextNode(''));
+  						} else {
+  							domNode.textContent = value;
   						}
   					}
-  				} else if ((typeof value === 'undefined' ? 'undefined' : babelHelpers_typeof(value)) === 'object') {
-
-  					var tree = value && value.tree;
-
-  					if (tree) {
-  						domNode.appendChild(value.tree.dom.create(value, treeLifecycle, context));
+  					if (dynamicAttrs) {
+  						addDOMDynamicAttributes(item, domNode, dynamicAttrs, null);
   					}
-  				} else if (isStringOrNumber(value)) {
-  					domNode.textContent = value;
-  				}
+  					domNodeMap[item.id] = domNode;
+  					return domNode;
+  					break;
+
+  				case DYNAMIC_CHILD_NODE:
+
+  					if (!isVoid(value)) {
+  						if (isArray(value)) {
+  							for (var i = 0; i < value.length; i++) {
+  								var childItem = value[i];
+  								// catches edge case where we e.g. have [null, null, null] as a starting point
+  								if (!isVoid(childItem) && (typeof childItem === 'undefined' ? 'undefined' : babelHelpers_typeof(childItem)) === 'object') {
+
+  									var tree = childItem && childItem.tree;
+
+  									if (tree) {
+  										var childNode = childItem.tree.dom.create(childItem, treeLifecycle, context);
+
+  										if (childItem.key === undefined) {
+  											keyedChildren = false;
+  										}
+  										childNodeList.push(childNode);
+  										domNode.appendChild(childNode);
+  									}
+  								} else if (isStringOrNumber(childItem)) {
+  									var textNode = document.createTextNode(childItem);
+
+  									domNode.appendChild(textNode);
+  									childNodeList.push(textNode);
+  									keyedChildren = false;
+  								}
+  							}
+  						} else if ((typeof value === 'undefined' ? 'undefined' : babelHelpers_typeof(value)) === 'object') {
+
+  							var tree = value && value.tree;
+
+  							if (tree) {
+  								domNode.appendChild(value.tree.dom.create(value, treeLifecycle, context));
+  							}
+  						} else if (isStringOrNumber(value)) {
+  							domNode.textContent = value;
+  						}
+  					}
+  					if (dynamicAttrs) {
+  						addDOMDynamicAttributes(item, domNode, dynamicAttrs, null);
+  					}
+  					domNodeMap[item.id] = domNode;
+  					return domNode;
+
+  					break;
   			}
-  			if (dynamicAttrs) {
-  				addDOMDynamicAttributes(item, domNode, dynamicAttrs, null);
-  			}
-  			domNodeMap[item.id] = domNode;
-  			return domNode;
   		},
   		update: function update(lastItem, nextItem, treeLifecycle, context) {
   			var domNode = domNodeMap[lastItem.id];
   			var nextValue = getValueWithIndex(nextItem, valueIndex);
   			var lastValue = getValueWithIndex(lastItem, valueIndex);
 
-  			if (nextValue && isVoid(lastValue)) {
+  			switch (templateNode.type) {
+  				case DYNAMIC_TEXT_NODE:
 
-  				if ((typeof nextValue === 'undefined' ? 'undefined' : babelHelpers_typeof(nextValue)) === 'object') {
-  					if (isArray(nextValue)) {
-  						updateAndAppendDynamicChildren(domNode, nextValue);
-  					} else {
-  						recreateNode(lastItem, nextItem, node, treeLifecycle, context);
+  					if (nextValue !== lastValue) {
+  						if (isVoid(nextValue)) {
+  							if (isVoid(lastValue)) {
+  								domNode.firstChild.nodeValue = '';
+  							} else {
+  								domNode.textContent = '';
+  							}
+  						} else {
+
+  							if (isVoid(lastValue)) {
+  								domNode.textContent = nextValue;
+  							} else {
+  								domNode.firstChild.nodeValue = nextValue;
+  							}
+  						}
   					}
-  				} else {
-  					domNode.appendChild(document.createTextNode(nextValue));
-  				}
-  			} else if (lastValue && isVoid(nextValue)) {
+  					break;
+  				case DYNAMIC_CHILD_NODE:
+  					if (nextValue && isVoid(lastValue)) {
 
-  				if (isArray(lastValue)) {
+  						if ((typeof nextValue === 'undefined' ? 'undefined' : babelHelpers_typeof(nextValue)) === 'object') {
+  							if (isArray(nextValue)) {
+  								updateAndAppendDynamicChildren(domNode, nextValue);
+  							} else {
+  								recreateNode(lastItem, nextItem, node, treeLifecycle, context);
+  							}
+  						} else {
+  							domNode.appendChild(document.createTextNode(nextValue));
+  						}
+  					} else if (lastValue && isVoid(nextValue)) {
 
-  					for (var i = 0; i < lastValue.length; i++) {
+  						if (isArray(lastValue)) {
 
-  						if (!isVoid(domNode.childNodes[i])) {
-  							domNode.removeChild(domNode.childNodes[i]);
+  							for (var i = 0; i < lastValue.length; i++) {
+
+  								if (!isVoid(domNode.childNodes[i])) {
+  									domNode.removeChild(domNode.childNodes[i]);
+  								} else {
+  									removeChild(domNode);
+  								}
+  							}
   						} else {
   							removeChild(domNode);
   						}
-  					}
-  				} else {
-  					removeChild(domNode);
-  				}
-  			} else if (nextValue !== lastValue) {
-  				if (isStringOrNumber(nextValue)) {
-  					appendText(domNode, nextValue);
-  				} else if (isVoid(nextValue)) {
-  					removeChild(domNode);
-  					// if we update from undefined, we will have an array with zero length.
-  					// If we check if it's an array, it will throw 'x' is undefined.
-  				} else if (nextValue.length !== 0 && isArray(nextValue)) {
-  						if (lastValue && isArray(lastValue)) {
-  							if (keyedChildren) {
-  								updateKeyed(nextValue, lastValue, domNode, null, treeLifecycle, context);
-  							} else {
-  								updateNonKeyed(nextValue, lastValue, childNodeList, domNode, null, treeLifecycle, context);
-  							}
-  						} else {
-  							// lastValue is undefined, so set it to an empty array and update
-  							updateNonKeyed(nextValue, [], childNodeList, domNode, null, treeLifecycle, context);
-  						}
-  					} else if ((typeof nextValue === 'undefined' ? 'undefined' : babelHelpers_typeof(nextValue)) === 'object') {
-  						// Sometimes 'nextValue' can be an empty array or nothing at all, then it will
-  						// throw ': nextValue.tree is undefined'.
-  						var tree = nextValue && nextValue.tree;
+  					} else if (nextValue !== lastValue) {
+  						if (isStringOrNumber(nextValue)) {
+  							appendText(domNode, nextValue);
+  						} else if (isVoid(nextValue)) {
+  							removeChild(domNode);
+  							// if we update from undefined, we will have an array with zero length.
+  							// If we check if it's an array, it will throw 'x' is undefined.
+  						} else if (nextValue.length !== 0 && isArray(nextValue)) {
+  								if (lastValue && isArray(lastValue)) {
+  									if (keyedChildren) {
+  										updateKeyed(nextValue, lastValue, domNode, null, treeLifecycle, context);
+  									} else {
+  										updateNonKeyed(nextValue, lastValue, childNodeList, domNode, null, treeLifecycle, context);
+  									}
+  								} else {
+  									// lastValue is undefined, so set it to an empty array and update
+  									updateNonKeyed(nextValue, [], childNodeList, domNode, null, treeLifecycle, context);
+  								}
+  							} else if ((typeof nextValue === 'undefined' ? 'undefined' : babelHelpers_typeof(nextValue)) === 'object') {
+  								// Sometimes 'nextValue' can be an empty array or nothing at all, then it will
+  								// throw ': nextValue.tree is undefined'.
+  								var tree = nextValue && nextValue.tree;
 
-  						if (!isVoid(tree)) {
+  								if (!isVoid(tree)) {
 
-  							// If we update from 'null', there will be no 'tree', and the code will throw.
-  							var _tree = lastValue && lastValue.tree;
+  									// If we update from 'null', there will be no 'tree', and the code will throw.
+  									var _tree = lastValue && lastValue.tree;
 
-  							if (!isVoid(_tree)) {
-  								_tree.dom.update(lastValue, nextValue, treeLifecycle, context);
-  							} else {
-  								// TODO implement
-  								// NOTE There will be no 'tree' if we update from a null value
-  							}
-  						} else {
-  								// Edge case! If we update from e.g object literal - {} - from a existing value, the
-  								// value will not be unset
-  								removeChild(domNode);
+  									if (!isVoid(_tree)) {
+  										_tree.dom.update(lastValue, nextValue, treeLifecycle, context);
+  									} else {
+  										// TODO implement
+  										// NOTE There will be no 'tree' if we update from a null value
+  									}
+  								} else {
+  										// Edge case! If we update from e.g object literal - {} - from a existing value, the
+  										// value will not be unset
+  										removeChild(domNode);
+  									}
   							}
   					}
+  					break;
   			}
   			if (dynamicAttrs) {
   				updateDOMDynamicAttributes(lastItem, nextItem, domNode, dynamicAttrs);
   			}
   		},
-  		remove: function remove(item, treeLifecycle) {
+  		remove: function remove(item) {
   			var domNode = domNodeMap[item.id];
 
-  			removeValueTree(getValueWithIndex(item, valueIndex), treeLifecycle);
   			if (dynamicAttrs) {
   				clearListeners(item, domNode, dynamicAttrs);
   			}
@@ -2480,267 +2528,206 @@
   	return node;
   }
 
-  function addShapeChildren(domNode, subTreeForChildren, item, treeLifecycle, context) {
-
-  	if (!isVoid(subTreeForChildren)) {
-  		if (isArray(subTreeForChildren)) {
-  			for (var i = 0; i < subTreeForChildren.length; i++) {
-  				var subTree = subTreeForChildren[i];
-  				var childNode = subTree.create(item, treeLifecycle, context);
-
-  				domNode.appendChild(childNode);
-  			}
-  		} else if ((typeof subTreeForChildren === 'undefined' ? 'undefined' : babelHelpers_typeof(subTreeForChildren)) === 'object') {
-  			domNode.appendChild(subTreeForChildren.create(item, treeLifecycle, context));
-  		}
-  	}
-  }
-
-  function createRootNodeWithDynamicSubTreeForChildren(templateNode, subTreeForChildren, dynamicAttrs, recyclingEnabled) {
-  	var node = {
-  		pool: [],
-  		keyedPool: [],
-  		overrideItem: null,
-  		create: function create(item, treeLifecycle, context) {
-  			var domNode = undefined;
-
-  			if (recyclingEnabled) {
-  				domNode = recycle(node, item, treeLifecycle, context);
-  				if (domNode) {
-  					return domNode;
-  				}
-  			}
-  			domNode = templateNode.cloneNode(false);
-
-  			addShapeChildren(domNode, subTreeForChildren, item, treeLifecycle, context);
-
-  			if (dynamicAttrs) {
-  				addDOMDynamicAttributes(item, domNode, dynamicAttrs, node);
-  			}
-  			item.rootNode = domNode;
-  			return domNode;
-  		},
-  		update: function update(lastItem, nextItem, treeLifecycle, context) {
-  			nextItem.id = lastItem.id;
-
-  			if (node !== lastItem.tree.dom) {
-  				var newDomNode = recreateRootNode(lastItem, nextItem, node, treeLifecycle, context);
-
-  				nextItem.rootNode = newDomNode;
-  				return newDomNode;
-  			}
-  			var domNode = lastItem.rootNode;
-
-  			nextItem.rootNode = domNode;
-  			if (!isVoid(subTreeForChildren)) {
-  				if (isArray(subTreeForChildren)) {
-  					for (var i = 0; i < subTreeForChildren.length; i++) {
-  						var subTree = subTreeForChildren[i];
-
-  						subTree.update(lastItem, nextItem, treeLifecycle, context);
-  					}
-  				} else if ((typeof subTreeForChildren === 'undefined' ? 'undefined' : babelHelpers_typeof(subTreeForChildren)) === 'object') {
-  					subTreeForChildren.update(lastItem, nextItem, treeLifecycle, context);
-  				}
-  			}
-  			if (dynamicAttrs) {
-  				updateDOMDynamicAttributes(lastItem, nextItem, domNode, dynamicAttrs);
-  			}
-  		},
-  		remove: function remove(item, treeLifecycle) {
-  			if (!isVoid(subTreeForChildren)) {
-  				if (isArray(subTreeForChildren)) {
-  					for (var i = 0; i < subTreeForChildren.length; i++) {
-  						var subTree = subTreeForChildren[i];
-
-  						subTree.remove(item, treeLifecycle);
-  					}
-  				} else if ((typeof subTreeForChildren === 'undefined' ? 'undefined' : babelHelpers_typeof(subTreeForChildren)) === 'object') {
-  					subTreeForChildren.remove(item, treeLifecycle);
-  				}
-  			}
-  			if (dynamicAttrs) {
-  				clearListeners(item, item.rootNode, dynamicAttrs);
-  			}
-  		}
-  	};
-
-  	return node;
-  }
-
-  function createNodeWithDynamicSubTreeForChildren(templateNode, subTreeForChildren, dynamicAttrs) {
+  function createNodeWithStaticChild(templateNode, dynamicAttrs) {
   	var domNodeMap = {};
   	var node = {
   		overrideItem: null,
-  		create: function create(item, treeLifecycle, context) {
-  			var domNode = templateNode.cloneNode(false);
+  		create: function create(item) {
+  			var domNode = templateNode.node.cloneNode(true);
 
-  			addShapeChildren(domNode, subTreeForChildren, item, treeLifecycle, context);
   			if (dynamicAttrs) {
   				addDOMDynamicAttributes(item, domNode, dynamicAttrs, null);
   			}
   			domNodeMap[item.id] = domNode;
   			return domNode;
   		},
-  		update: function update(lastItem, nextItem, treeLifecycle, context) {
+  		update: function update(lastItem, nextItem) {
   			var domNode = domNodeMap[lastItem.id];
 
-  			if (!isVoid(subTreeForChildren)) {
-  				if (isArray(subTreeForChildren)) {
-  					for (var i = 0; i < subTreeForChildren.length; i++) {
-  						var subTree = subTreeForChildren[i];
-
-  						subTree.update(lastItem, nextItem, treeLifecycle, context);
-  					}
-  				} else if ((typeof subTreeForChildren === 'undefined' ? 'undefined' : babelHelpers_typeof(subTreeForChildren)) === 'object') {
-  					var newDomNode = subTreeForChildren.update(lastItem, nextItem, treeLifecycle, context);
-
-  					if (newDomNode) {
-  						replaceChild(domNode, newDomNode);
-  					}
-  				}
-  			}
   			if (dynamicAttrs) {
   				updateDOMDynamicAttributes(lastItem, nextItem, domNode, dynamicAttrs);
   			}
   		},
-  		remove: function remove(item, treeLifecycle) {
+  		remove: function remove(item) {
   			var domNode = domNodeMap[item.id];
 
-  			if (!isVoid(subTreeForChildren)) {
-  				if (isArray(subTreeForChildren)) {
-  					for (var i = 0; i < subTreeForChildren.length; i++) {
-  						var subTree = subTreeForChildren[i];
-
-  						subTree.remove(item, treeLifecycle);
-  					}
-  				} else if ((typeof subTreeForChildren === 'undefined' ? 'undefined' : babelHelpers_typeof(subTreeForChildren)) === 'object') {
-  					subTreeForChildren.remove(item, treeLifecycle);
-  				}
-  			}
   			if (dynamicAttrs) {
   				clearListeners(item, domNode, dynamicAttrs);
   			}
   		}
   	};
+
   	return node;
   }
 
-  function createDynamicNode(valueIndex) {
-  	var domNodeMap = {};
-  	var childNodeList = [];
-  	var keyedChildren = true;
-  	var nextDomNode = undefined;
+  function updateComponent(component, prevState, nextState, prevProps, nextProps, renderCallback) {
+  	if (!nextProps.children) {
+  		nextProps.children = prevProps.children;
+  	}
+  	if (prevProps !== nextProps || prevState !== nextState) {
+  		if (prevProps !== nextProps) {
+  			component._blockRender = true;
+  			component.componentWillReceiveProps(nextProps);
+  			component._blockRender = false;
+  		}
+  		var shouldUpdate = component.shouldComponentUpdate(nextProps, nextState);
+
+  		if (shouldUpdate) {
+  			component._blockSetState = true;
+  			component.componentWillUpdate(nextProps, nextState);
+  			component._blockSetState = false;
+  			component.props = nextProps;
+  			component.state = nextState;
+  			var newDomNode = renderCallback();
+
+  			component.componentDidUpdate(prevProps, prevState);
+  			return newDomNode;
+  		}
+  	}
+  }
+
+  function createNodeWithComponent(componentIndex, props) {
+  	var domNode = undefined;
+  	var currentItem = undefined;
+  	var statelessRender = undefined;
   	var node = {
   		overrideItem: null,
+  		instance: null,
   		create: function create(item, treeLifecycle, context) {
-  			var value = getValueWithIndex(item, valueIndex);
-  			var domNode = undefined;
-  			var type = getTypeFromValue(value);
+  			var toUseItem = item;
+  			var nextRender = undefined;
+  			var instance = node.instance;
 
-  			switch (type) {
-  				case ValueTypes.TEXT:
-  					// Testing the length property are actually faster than testing the
-  					// string against '', because the interpreter won't have to create a String
-  					// object from the string literal.
-  					if (isVoid(value) || value.length === 0) {
-  						value = '';
-  					}
-  					domNode = document.createTextNode(value);
-  					break;
-  				case ValueTypes.ARRAY:
-  					var virtualList = createVirtualList(value, item, childNodeList, treeLifecycle, context);
-  					domNode = virtualList.domNode;
-  					keyedChildren = virtualList.keyedChildren;
-  					treeLifecycle.addTreeSuccessListener(function () {
-  						nextDomNode = childNodeList[childNodeList.length - 1].nextSibling || null;
-  						domNode = childNodeList[0].parentNode;
-  					});
-  					break;
-  				case ValueTypes.TREE:
-  					domNode = value.create(item, treeLifecycle, context);
-  					break;
-  				case ValueTypes.EMPTY_OBJECT:
-  					if ("development" !== 'production') {
-  						throw Error('Inferno Error: A valid template node must be returned. You may have returned undefined, an array or some other invalid object.');
-  					}
-  					break;
-  				case ValueTypes.FUNCTION:
-  					if ("development" !== 'production') {
-  						throw Error('Inferno Error: A valid template node must be returned. You may have returned undefined, an array or some other invalid object.');
-  					}
-  					break;
-  				case ValueTypes.FRAGMENT:
-  					domNode = value.tree.dom.create(value, treeLifecycle, context);
-  					break;
+  			if (node.overrideItem !== null) {
+  				toUseItem = node.overrideItem;
   			}
-  			domNodeMap[item.id] = domNode;
+  			var Component = getValueWithIndex(toUseItem, componentIndex);
+
+  			currentItem = item;
+  			if (isVoid(Component)) {
+  				domNode = document.createTextNode('');
+  				node.instance = null;
+  				return domNode;
+  			} else if (typeof Component === 'function') {
+  				// stateless component
+  				if (!Component.prototype.render) {
+  					nextRender = Component(getValueForProps(props, toUseItem), context);
+
+  					nextRender.parent = item;
+  					domNode = nextRender.tree.dom.create(nextRender, treeLifecycle, context);
+  					statelessRender = nextRender;
+  				} else {
+  					(function () {
+  						instance = new Component(getValueForProps(props, toUseItem));
+  						instance.context = context;
+  						instance.componentWillMount();
+  						nextRender = instance.render();
+  						var childContext = instance.getChildContext();
+  						var fragmentFirstChild = undefined;
+
+  						if (childContext) {
+  							context = babelHelpers_extends({}, context, childContext);
+  						}
+  						nextRender.parent = item;
+  						domNode = nextRender.tree.dom.create(nextRender, treeLifecycle, context);
+  						instance._lastRender = nextRender;
+
+  						if (domNode instanceof DocumentFragment) {
+  							fragmentFirstChild = domNode.childNodes[0];
+  						}
+  						treeLifecycle.addTreeSuccessListener(function () {
+  							if (fragmentFirstChild) {
+  								domNode = fragmentFirstChild.parentNode;
+  							}
+  							instance.componentDidMount();
+  						});
+  						instance.forceUpdate = function () {
+  							instance.context = context;
+  							var nextRender = instance.render.call(instance);
+  							var childContext = instance.getChildContext();
+
+  							if (childContext) {
+  								context = babelHelpers_extends({}, context, childContext);
+  							}
+  							nextRender.parent = currentItem;
+  							var newDomNode = nextRender.tree.dom.update(instance._lastRender, nextRender, treeLifecycle, context);
+
+  							if (newDomNode) {
+  								domNode = newDomNode;
+  								instance._lastRender.rootNode = domNode;
+  								instance._lastRender = nextRender;
+  								return domNode;
+  							} else {
+  								instance._lastRender = nextRender;
+  							}
+  						};
+  					})();
+  				}
+  			}
   			return domNode;
   		},
   		update: function update(lastItem, nextItem, treeLifecycle, context) {
-  			var domNode = domNodeMap[lastItem.id];
-  			var nextValue = getValueWithIndex(nextItem, valueIndex);
-  			var lastValue = getValueWithIndex(lastItem, valueIndex);
+  			var Component = getValueWithIndex(nextItem, componentIndex);
+  			var instance = node.instance;
 
-  			if (nextValue !== lastValue) {
-  				var nextType = getTypeFromValue(nextValue);
-  				var lastType = getTypeFromValue(lastValue);
-
-  				if (lastType !== nextType) {
-  					recreateNode(domNode, nextItem, node, treeLifecycle, context);
-  					return;
+  			currentItem = nextItem;
+  			if (!Component) {
+  				recreateNode(domNode, nextItem, node, treeLifecycle, context);
+  				if (instance) {
+  					instance._lastRender.rootNode = domNode;
   				}
-  				switch (nextType) {
-  					case ValueTypes.TEXT:
-  						// Testing the length property are actually faster than testing the
-  						// string against '', because the interpreter won't have to create a String
-  						// object from the string literal.
-  						if (isVoid(nextValue) || nextValue.length === 0) {
-  							nextValue = '';
+  				return domNode;
+  			}
+  			if (typeof Component === 'function') {
+  				// stateless component
+  				if (!Component.prototype.render) {
+  					var nextRender = Component(getValueForProps(props, nextItem), context);
+  					var newDomNode = undefined;
+
+  					nextRender.parent = currentItem;
+  					// Edge case. If we update from a stateless component with a null value, we need to re-create it, not update it
+  					// E.g. start with 'render(template(null), container); ' will cause this.
+  					if (!isVoid(statelessRender)) {
+  						newDomNode = nextRender.tree.dom.update(statelessRender || node.instance._lastRender, nextRender, treeLifecycle, context);
+  					} else {
+  						recreateNode(domNode, nextItem, node, treeLifecycle, context);
+  						return;
+  					}
+  					statelessRender = nextRender;
+
+  					if (!isVoid(newDomNode)) {
+  						if (domNode.parentNode) {
+  							domNode.parentNode.replaceChild(newDomNode, domNode);
   						}
-  						domNode.nodeValue = nextValue;
-  						break;
-  					case ValueTypes.ARRAY:
-  						updateVirtualList(lastValue, nextValue, childNodeList, domNode, nextDomNode, keyedChildren, treeLifecycle, context);
-  						break;
-  					case ValueTypes.TREE:
-  						// TODO
-  						break;
-  					case ValueTypes.FRAGMENT:
-  						nextValue.tree.dom.update(lastValue, nextValue, treeLifecycle, context);
-  						break;
-  					default:
-  						break;
+  						domNode = newDomNode;
+  						return domNode;
+  					}
+  				} else {
+  					if (!instance || Component !== instance.constructor) {
+  						recreateNode(domNode, nextItem, node, treeLifecycle, context);
+  						return domNode;
+  					}
+  					var prevProps = instance.props;
+  					var prevState = instance.state;
+  					var nextState = instance.state;
+  					var nextProps = getValueForProps(props, nextItem);
+
+  					return updateComponent(instance, prevState, nextState, prevProps, nextProps, instance.forceUpdate);
   				}
   			}
   		},
   		remove: function remove(item, treeLifecycle) {
-  			var value = getValueWithIndex(item, valueIndex);
-  			var type = getTypeFromValue(value);
+  			var instance = node.instance;
 
-  			if (type === ValueTypes.TREE) {
-  				value.remove(item, treeLifecycle);
-  			} else if (type === ValueTypes.FRAGMENT) {
-  				value.tree.dom.remove(value, treeLifecycle);
+  			if (instance) {
+  				instance._lastRender.tree.dom.remove(instance._lastRender, treeLifecycle);
+  				instance.componentWillUnmount();
+  				node.instance = null;
   			}
   		}
   	};
 
   	return node;
-  }
-
-  var updateComponent = undefined;
-
-  var global$1 = global$1 || (typeof window !== 'undefined' ? window : null);
-
-  if (global$1 && global$1.InfernoComponent) {
-  	updateComponent = global$1.InfernoComponent.updateComponent;
-  } else if (global$1 && !global$1.InfernoComponent) {
-  	try {
-  		updateComponent = require('inferno-component').updateComponent;
-  	} catch (e) {
-  		// do nothing, this is fine, the person might be using stateless components
-  	}
   }
 
   function createRootNodeWithComponent(componentIndex, props, recyclingEnabled) {
@@ -2904,157 +2891,87 @@
   	return node;
   }
 
-  var updateComponent$1 = undefined;
+  function addShapeChildren(domNode, subTreeForChildren, item, treeLifecycle, context) {
 
-  var global$2 = global$2 || (typeof window !== 'undefined' ? window : null);
+  	if (!isVoid(subTreeForChildren)) {
+  		if (isArray(subTreeForChildren)) {
+  			for (var i = 0; i < subTreeForChildren.length; i++) {
+  				var subTree = subTreeForChildren[i];
+  				var childNode = subTree.create(item, treeLifecycle, context);
 
-  if (global$2 && global$2.InfernoComponent) {
-  	updateComponent$1 = global$2.InfernoComponent.updateComponent;
-  } else if (global$2 && !global$2.InfernoComponent) {
-  	try {
-  		updateComponent$1 = require('inferno-component').updateComponent;
-  	} catch (e) {
-  		// do nothing, this is fine, the person might be using stateless components
+  				domNode.appendChild(childNode);
+  			}
+  		} else if ((typeof subTreeForChildren === 'undefined' ? 'undefined' : babelHelpers_typeof(subTreeForChildren)) === 'object') {
+  			domNode.appendChild(subTreeForChildren.create(item, treeLifecycle, context));
+  		}
   	}
   }
 
-  function createNodeWithComponent(componentIndex, props) {
-  	var domNode = undefined;
-  	var currentItem = undefined;
-  	var statelessRender = undefined;
+  function createRootNodeWithDynamicSubTreeForChildren(templateNode, subTreeForChildren, dynamicAttrs, recyclingEnabled) {
   	var node = {
+  		pool: [],
+  		keyedPool: [],
   		overrideItem: null,
-  		instance: null,
   		create: function create(item, treeLifecycle, context) {
-  			var toUseItem = item;
-  			var nextRender = undefined;
-  			var instance = node.instance;
+  			var domNode = undefined;
 
-  			if (node.overrideItem !== null) {
-  				toUseItem = node.overrideItem;
-  			}
-  			var Component = getValueWithIndex(toUseItem, componentIndex);
-
-  			currentItem = item;
-  			if (isVoid(Component)) {
-  				domNode = document.createTextNode('');
-  				node.instance = null;
-  				return domNode;
-  			} else if (typeof Component === 'function') {
-  				// stateless component
-  				if (!Component.prototype.render) {
-  					nextRender = Component(getValueForProps(props, toUseItem), context);
-
-  					nextRender.parent = item;
-  					domNode = nextRender.tree.dom.create(nextRender, treeLifecycle, context);
-  					statelessRender = nextRender;
-  				} else {
-  					(function () {
-  						instance = new Component(getValueForProps(props, toUseItem));
-  						instance.context = context;
-  						instance.componentWillMount();
-  						nextRender = instance.render();
-  						var childContext = instance.getChildContext();
-  						var fragmentFirstChild = undefined;
-
-  						if (childContext) {
-  							context = babelHelpers_extends({}, context, childContext);
-  						}
-  						nextRender.parent = item;
-  						domNode = nextRender.tree.dom.create(nextRender, treeLifecycle, context);
-  						instance._lastRender = nextRender;
-
-  						if (domNode instanceof DocumentFragment) {
-  							fragmentFirstChild = domNode.childNodes[0];
-  						}
-  						treeLifecycle.addTreeSuccessListener(function () {
-  							if (fragmentFirstChild) {
-  								domNode = fragmentFirstChild.parentNode;
-  							}
-  							instance.componentDidMount();
-  						});
-  						instance.forceUpdate = function () {
-  							instance.context = context;
-  							var nextRender = instance.render.call(instance);
-  							var childContext = instance.getChildContext();
-
-  							if (childContext) {
-  								context = babelHelpers_extends({}, context, childContext);
-  							}
-  							nextRender.parent = currentItem;
-  							var newDomNode = nextRender.tree.dom.update(instance._lastRender, nextRender, treeLifecycle, context);
-
-  							if (newDomNode) {
-  								domNode = newDomNode;
-  								instance._lastRender.rootNode = domNode;
-  								instance._lastRender = nextRender;
-  								return domNode;
-  							} else {
-  								instance._lastRender = nextRender;
-  							}
-  						};
-  					})();
+  			if (recyclingEnabled) {
+  				domNode = recycle(node, item, treeLifecycle, context);
+  				if (domNode) {
+  					return domNode;
   				}
   			}
+  			domNode = templateNode.node.cloneNode(false);
+
+  			addShapeChildren(domNode, subTreeForChildren, item, treeLifecycle, context);
+
+  			if (dynamicAttrs) {
+  				addDOMDynamicAttributes(item, domNode, dynamicAttrs, node);
+  			}
+  			item.rootNode = domNode;
   			return domNode;
   		},
   		update: function update(lastItem, nextItem, treeLifecycle, context) {
-  			var Component = getValueWithIndex(nextItem, componentIndex);
-  			var instance = node.instance;
+  			nextItem.id = lastItem.id;
 
-  			currentItem = nextItem;
-  			if (!Component) {
-  				recreateNode(domNode, nextItem, node, treeLifecycle, context);
-  				if (instance) {
-  					instance._lastRender.rootNode = domNode;
-  				}
-  				return domNode;
+  			if (node !== lastItem.tree.dom) {
+  				var newDomNode = recreateRootNode(lastItem, nextItem, node, treeLifecycle, context);
+
+  				nextItem.rootNode = newDomNode;
+  				return newDomNode;
   			}
-  			if (typeof Component === 'function') {
-  				// stateless component
-  				if (!Component.prototype.render) {
-  					var nextRender = Component(getValueForProps(props, nextItem), context);
-  					var newDomNode = undefined;
+  			var domNode = lastItem.rootNode;
 
-  					nextRender.parent = currentItem;
-  					// Edge case. If we update from a stateless component with a null value, we need to re-create it, not update it
-  					// E.g. start with 'render(template(null), container); ' will cause this.
-  					if (!isVoid(statelessRender)) {
-  						newDomNode = nextRender.tree.dom.update(statelessRender || node.instance._lastRender, nextRender, treeLifecycle, context);
-  					} else {
-  						recreateNode(domNode, nextItem, node, treeLifecycle, context);
-  						return;
-  					}
-  					statelessRender = nextRender;
+  			nextItem.rootNode = domNode;
+  			if (!isVoid(subTreeForChildren)) {
+  				if (isArray(subTreeForChildren)) {
+  					for (var i = 0; i < subTreeForChildren.length; i++) {
+  						var subTree = subTreeForChildren[i];
 
-  					if (!isVoid(newDomNode)) {
-  						if (domNode.parentNode) {
-  							domNode.parentNode.replaceChild(newDomNode, domNode);
-  						}
-  						domNode = newDomNode;
-  						return domNode;
+  						subTree.update(lastItem, nextItem, treeLifecycle, context);
   					}
-  				} else {
-  					if (!instance || Component !== instance.constructor) {
-  						recreateNode(domNode, nextItem, node, treeLifecycle, context);
-  						return domNode;
-  					}
-  					var prevProps = instance.props;
-  					var prevState = instance.state;
-  					var nextState = instance.state;
-  					var nextProps = getValueForProps(props, nextItem);
-
-  					return updateComponent$1(instance, prevState, nextState, prevProps, nextProps, instance.forceUpdate);
+  				} else if ((typeof subTreeForChildren === 'undefined' ? 'undefined' : babelHelpers_typeof(subTreeForChildren)) === 'object') {
+  					subTreeForChildren.update(lastItem, nextItem, treeLifecycle, context);
   				}
+  			}
+  			if (dynamicAttrs) {
+  				updateDOMDynamicAttributes(lastItem, nextItem, domNode, dynamicAttrs);
   			}
   		},
   		remove: function remove(item, treeLifecycle) {
-  			var instance = node.instance;
+  			if (!isVoid(subTreeForChildren)) {
+  				if (isArray(subTreeForChildren)) {
+  					for (var i = 0; i < subTreeForChildren.length; i++) {
+  						var subTree = subTreeForChildren[i];
 
-  			if (instance) {
-  				instance._lastRender.tree.dom.remove(instance._lastRender, treeLifecycle);
-  				instance.componentWillUnmount();
-  				node.instance = null;
+  						subTree.remove(item, treeLifecycle);
+  					}
+  				} else if ((typeof subTreeForChildren === 'undefined' ? 'undefined' : babelHelpers_typeof(subTreeForChildren)) === 'object') {
+  					subTreeForChildren.remove(item, treeLifecycle);
+  				}
+  			}
+  			if (dynamicAttrs) {
+  				clearListeners(item, item.rootNode, dynamicAttrs);
   			}
   		}
   	};
@@ -3062,93 +2979,160 @@
   	return node;
   }
 
-  function createRootDynamicTextNode(templateNode, valueIndex, recyclingEnabled) {
+  function createNodeWithDynamicSubTreeForChildren(templateNode, subTreeForChildren, dynamicAttrs) {
+  	var domNodeMap = {};
   	var node = {
-  		pool: [],
-  		keyedPool: [],
   		overrideItem: null,
-  		create: function create(item) {
-  			var domNode = undefined;
+  		create: function create(item, treeLifecycle, context) {
+  			var domNode = templateNode.node.cloneNode(false);
 
-  			if (recyclingEnabled) {
-  				domNode = recycle(node, item);
-  				if (domNode) {
-  					return domNode;
-  				}
-  			}
-  			domNode = templateNode.cloneNode(false);
-  			var value = getValueWithIndex(item, valueIndex);
-
-  			if (!isVoid(value)) {
-  				if (isStringOrNumber(value)) {
-  					domNode.nodeValue = value;
-  				}
-  			}
-  			item.rootNode = domNode;
-  			return domNode;
-  		},
-  		update: function update(lastItem, nextItem, treeLifecycle) {
-
-  			if (node !== lastItem.tree.dom) {
-
-  				recreateRootNode(lastItem, nextItem, node, treeLifecycle);
-  				return;
-  			}
-  			var domNode = lastItem.rootNode;
-
-  			nextItem.rootNode = domNode;
-  			nextItem.id = lastItem.id;
-  			var nextValue = getValueWithIndex(nextItem, valueIndex);
-
-  			if (nextValue !== getValueWithIndex(lastItem, valueIndex)) {
-  				if (isStringOrNumber(nextValue)) {
-  					domNode.nodeValue = nextValue;
-  				}
-  			}
-  		},
-  		remove: function remove() /* lastItem */{}
-  	};
-
-  	return node;
-  }
-
-  function createRootVoidNode(templateNode, dynamicAttrs, recyclingEnabled) {
-  	var node = {
-  		pool: [],
-  		keyedPool: [],
-  		overrideItem: null,
-  		create: function create(item) {
-  			var domNode = undefined;
-
-  			if (recyclingEnabled) {
-  				domNode = recycle(node, item);
-  				if (domNode) {
-  					return domNode;
-  				}
-  			}
-  			domNode = templateNode.cloneNode(true);
-  			item.rootNode = domNode;
+  			addShapeChildren(domNode, subTreeForChildren, item, treeLifecycle, context);
   			if (dynamicAttrs) {
-  				addDOMDynamicAttributes(item, domNode, dynamicAttrs, node);
+  				addDOMDynamicAttributes(item, domNode, dynamicAttrs, null);
   			}
+  			domNodeMap[item.id] = domNode;
   			return domNode;
   		},
-  		update: function update(lastItem, nextItem) {
-  			if (node !== lastItem.tree.dom) {
-  				recreateRootNode(lastItem, nextItem, node);
-  				return;
-  			}
-  			var domNode = lastItem.rootNode;
+  		update: function update(lastItem, nextItem, treeLifecycle, context) {
+  			var domNode = domNodeMap[lastItem.id];
 
-  			nextItem.rootNode = domNode;
-  			nextItem.rootNode = lastItem.rootNode;
+  			if (!isVoid(subTreeForChildren)) {
+  				if (isArray(subTreeForChildren)) {
+  					for (var i = 0; i < subTreeForChildren.length; i++) {
+  						var subTree = subTreeForChildren[i];
+
+  						subTree.update(lastItem, nextItem, treeLifecycle, context);
+  					}
+  				} else if ((typeof subTreeForChildren === 'undefined' ? 'undefined' : babelHelpers_typeof(subTreeForChildren)) === 'object') {
+  					var newDomNode = subTreeForChildren.update(lastItem, nextItem, treeLifecycle, context);
+
+  					if (newDomNode) {
+  						replaceChild(domNode, newDomNode);
+  					}
+  				}
+  			}
   			if (dynamicAttrs) {
   				updateDOMDynamicAttributes(lastItem, nextItem, domNode, dynamicAttrs);
   			}
   		},
-  		remove: function remove(item) {
+  		remove: function remove(item, treeLifecycle) {
+  			var domNode = domNodeMap[item.id];
+
+  			if (!isVoid(subTreeForChildren)) {
+  				if (isArray(subTreeForChildren)) {
+  					for (var i = 0; i < subTreeForChildren.length; i++) {
+  						var subTree = subTreeForChildren[i];
+
+  						subTree.remove(item, treeLifecycle);
+  					}
+  				} else if ((typeof subTreeForChildren === 'undefined' ? 'undefined' : babelHelpers_typeof(subTreeForChildren)) === 'object') {
+  					subTreeForChildren.remove(item, treeLifecycle);
+  				}
+  			}
   			if (dynamicAttrs) {
-  				clearListeners(item, item.rootNode, dynamicAttrs);
+  				clearListeners(item, domNode, dynamicAttrs);
+  			}
+  		}
+  	};
+  	return node;
+  }
+
+  function createDynamicNode(valueIndex) {
+  	var domNodeMap = {};
+  	var childNodeList = [];
+  	var keyedChildren = true;
+  	var nextDomNode = undefined;
+  	var node = {
+  		overrideItem: null,
+  		create: function create(item, treeLifecycle, context) {
+  			var value = getValueWithIndex(item, valueIndex);
+  			var domNode = undefined;
+  			var type = getTypeFromValue(value);
+
+  			switch (type) {
+  				case ValueTypes.TEXT:
+  					// Testing the length property are actually faster than testing the
+  					// string against '', because the interpreter won't have to create a String
+  					// object from the string literal.
+  					if (isVoid(value) || value.length === 0) {
+  						value = '';
+  					}
+  					domNode = document.createTextNode(value);
+  					break;
+  				case ValueTypes.ARRAY:
+  					var virtualList = createVirtualList(value, item, childNodeList, treeLifecycle, context);
+  					domNode = virtualList.domNode;
+  					keyedChildren = virtualList.keyedChildren;
+  					treeLifecycle.addTreeSuccessListener(function () {
+  						nextDomNode = childNodeList[childNodeList.length - 1].nextSibling || null;
+  						domNode = childNodeList[0].parentNode;
+  					});
+  					break;
+  				case ValueTypes.TREE:
+  					domNode = value.create(item, treeLifecycle, context);
+  					break;
+  				case ValueTypes.EMPTY_OBJECT:
+  					if ("development" !== 'production') {
+  						throw Error('Inferno Error: A valid template node must be returned. You may have returned undefined, an array or some other invalid object.');
+  					}
+  					break;
+  				case ValueTypes.FUNCTION:
+  					if ("development" !== 'production') {
+  						throw Error('Inferno Error: A valid template node must be returned. You may have returned undefined, an array or some other invalid object.');
+  					}
+  					break;
+  				case ValueTypes.FRAGMENT:
+  					domNode = value.tree.dom.create(value, treeLifecycle, context);
+  					break;
+  			}
+  			domNodeMap[item.id] = domNode;
+  			return domNode;
+  		},
+  		update: function update(lastItem, nextItem, treeLifecycle, context) {
+  			var domNode = domNodeMap[lastItem.id];
+  			var nextValue = getValueWithIndex(nextItem, valueIndex);
+  			var lastValue = getValueWithIndex(lastItem, valueIndex);
+
+  			if (nextValue !== lastValue) {
+  				var nextType = getTypeFromValue(nextValue);
+  				var lastType = getTypeFromValue(lastValue);
+
+  				if (lastType !== nextType) {
+  					recreateNode(domNode, nextItem, node, treeLifecycle, context);
+  					return;
+  				}
+  				switch (nextType) {
+  					case ValueTypes.TEXT:
+  						// Testing the length property are actually faster than testing the
+  						// string against '', because the interpreter won't have to create a String
+  						// object from the string literal.
+  						if (isVoid(nextValue) || nextValue.length === 0) {
+  							nextValue = '';
+  						}
+  						domNode.nodeValue = nextValue;
+  						break;
+  					case ValueTypes.ARRAY:
+  						updateVirtualList(lastValue, nextValue, childNodeList, domNode, nextDomNode, keyedChildren, treeLifecycle, context);
+  						break;
+  					case ValueTypes.TREE:
+  						// TODO
+  						break;
+  					case ValueTypes.FRAGMENT:
+  						nextValue.tree.dom.update(lastValue, nextValue, treeLifecycle, context);
+  						break;
+  					default:
+  						break;
+  				}
+  			}
+  		},
+  		remove: function remove(item, treeLifecycle) {
+  			var value = getValueWithIndex(item, valueIndex);
+  			var type = getTypeFromValue(value);
+
+  			if (type === ValueTypes.TREE) {
+  				value.remove(item, treeLifecycle);
+  			} else if (type === ValueTypes.FRAGMENT) {
+  				value.tree.dom.remove(value, treeLifecycle);
   			}
   		}
   	};
@@ -3161,7 +3145,12 @@
   	var node = {
   		overrideItem: null,
   		create: function create(item) {
-  			var domNode = templateNode.cloneNode(true);
+
+  			if (templateNode.type === STATIC_NODE) {
+  				return templateNode.node.cloneNode(true);
+  			}
+
+  			var domNode = templateNode.node.cloneNode(true);
 
   			if (dynamicAttrs) {
   				addDOMDynamicAttributes(item, domNode, dynamicAttrs, null);
@@ -3177,141 +3166,45 @@
   			}
   		},
   		remove: function remove(item) {
-  			var domNode = domNodeMap[item.id];
+  			if (templateNode.type === VOID_NODE) {
+  				var domNode = domNodeMap[item.id];
 
-  			if (dynamicAttrs) {
-  				clearListeners(item, domNode, dynamicAttrs);
-  			}
-  		}
-  	};
-
-  	return node;
-  }
-
-  function canHydrate(domNode, nextDomNode) {
-  	if (nextDomNode) {
-  		if (nextDomNode.hasAttribute('data-inferno')) {
-  			return true;
-  		} else {
-  			// otherwise clear the DOM node
-  			domNode.innerHTML = '';
-  		}
-  	}
-  }
-
-  function purgeCommentNodes(domNode, parentDom) {
-  	var nextSibling = domNode.nextSibling;
-
-  	if (nextSibling && nextSibling.nodeType === 8) {
-  		nextSibling = purgeCommentNodes(nextSibling, parentDom);
-  		parentDom.removeChild(nextSibling);
-  	}
-
-  	return nextSibling;
-  }
-
-  function validateHydrateNodeChildren(hydrateNode, templateNode) {
-  	var templateNodeChild = templateNode.firstChild;
-  	var hydrateNodeChild = hydrateNode.firstChild;
-
-  	while (templateNodeChild) {
-  		var result = validateHydrateNode(hydrateNodeChild, templateNodeChild);
-  		if (!result) {
-  			return false;
-  		}
-  		templateNodeChild = templateNodeChild.nextSibling;
-  		// check when we reach a comment and remove it, as they are used to break up text nodes
-  		hydrateNodeChild = purgeCommentNodes(hydrateNodeChild, hydrateNode);
-  	}
-  	return true;
-  }
-
-  function validateHydrateNode(hydrateNode, templateNode, item, dynamicAttrs) {
-  	// check nodeNames, return false if not same
-  	if (hydrateNode.nodeName !== templateNode.nodeName) {
-  		return false;
-  	}
-  	if (hydrateNode.nodeType === 1) {
-  		// check hydrateNode has all the same attrs as templateNode (as these will be static)
-  		// return false if not same
-  		// TODO
-
-  		// check hydrateNode has all the same attrs as dynamicAttrs+item (as these will be dyanmic),
-  		// passively update here and do not return false (as state could have changed) if not same
-  		if (dynamicAttrs && item) {}
-  		// TODO
-
-  		// check through children
-  		return validateHydrateNodeChildren(hydrateNode, templateNode);
-  	} else if (hydrateNode.nodeType === 3) {
-  		return hydrateNode.nodeValue === templateNode.nodeValue;
-  	}
-  }
-
-  function createRootStaticNode(templateNode, recyclingEnabled) {
-  	var node = {
-  		pool: [],
-  		keyedPool: [],
-  		overrideItem: null,
-  		create: function create(item) {
-  			var domNode = undefined;
-
-  			if (recyclingEnabled) {
-  				domNode = recycle(node, item);
-  				if (domNode) {
-  					return domNode;
+  				if (dynamicAttrs) {
+  					clearListeners(item, domNode, dynamicAttrs);
   				}
   			}
-  			domNode = templateNode.cloneNode(true);
-  			item.rootNode = domNode;
-  			return domNode;
   		},
-  		update: function update(lastItem, nextItem) {
-  			// wrong tree and it toggle
-  			if (node !== lastItem.tree.dom) {
-  				recreateRootNode(lastItem, nextItem, node);
-  				return;
-  			}
-  			nextItem.rootNode = lastItem.rootNode;
-  		},
-  		remove: function remove() {},
-  		hydrate: function hydrate(hydrateNode, item) {
-  			if (!validateHydrateNode(hydrateNode, templateNode, item)) {
-  				recreateRootNodeFromHydration(hydrateNode, item, node);
-  				return;
-  			}
-  			item.rootNode = hydrateNode;
-  		}
-  	};
-
-  	return node;
-  }
-
-  function createStaticNode(templateNode) {
-  	var node = {
-  		overrideItem: null,
-  		create: function create() {
-  			return templateNode.cloneNode(true);
-  		},
-  		update: function update() {},
-  		remove: function remove() {},
   		hydrate: function hydrate() {}
   	};
 
   	return node;
   }
 
-  function createElement(schema, domNamespace, parentNode) {
-  	var MathNamespace = 'http://www.w3.org/1998/Math/MathML';
-  	var SVGNamespace = 'http://www.w3.org/2000/svg';
+  // To be compat with React, we support at least the same SVG elements
+  function isSVGElement(nodeName) {
+  	return nodeName === 'svg' || nodeName === 'clipPath' || nodeName === 'circle' || nodeName === 'defs' || nodeName === 'desc' || nodeName === 'ellipse' || nodeName === 'filter' || nodeName === 'g' || nodeName === 'line' || nodeName === 'linearGradient' || nodeName === 'mask' || nodeName === 'marker' || nodeName === 'metadata' || nodeName === 'mpath' || nodeName === 'path' || nodeName === 'pattern' || nodeName === 'polygon' || nodeName === 'polyline' || nodeName === 'pattern' || nodeName === 'radialGradient' || nodeName === 'rect' || nodeName === 'set' || nodeName === 'stop' || nodeName === 'symbol' || nodeName === 'switch' || nodeName === 'text' || nodeName === 'tspan' || nodeName === 'use' || nodeName === 'view';
+  }
+
+  function isMathMLElement(nodeName) {
+  	return nodeName === 'mo' || nodeName === 'mover' || nodeName === 'mn' || nodeName === 'maction' || nodeName === 'menclose' || nodeName === 'merror' || nodeName === 'mfrac' || nodeName === 'mi' || nodeName === 'mmultiscripts' || nodeName === 'mpadded' || nodeName === 'mphantom' || nodeName === 'mroot' || nodeName === 'mrow' || nodeName === 'ms' || nodeName === 'mtd' || nodeName === 'mtable' || nodeName === 'munder' || nodeName === 'msub' || nodeName === 'msup' || nodeName === 'msubsup' || nodeName === 'mtr' || nodeName === 'mtext';
+  }
+
+  function createElement(schema, domNamespace) {
   	var nodeName = schema.tag.toLowerCase();
   	var is = schema.attrs && schema.attrs.is;
 
-  	var templateNode = undefined;
+  	return domNamespace ? is ? document.createElementNS(domNamespace, nodeName, is) : document.createElementNS(domNamespace, nodeName) : is ? document.createElement(nodeName, is) : document.createElement(nodeName);
+  }
+
+  function getNamespace(schema, domNamespace, parentNode) {
+  	var MathNamespace = 'http://www.w3.org/1998/Math/MathML';
+  	var SVGNamespace = 'http://www.w3.org/2000/svg';
+  	var nodeName = schema.tag.toLowerCase();
+  	var xmlns = schema.attrs && schema.attrs.xmlns;
 
   	if (domNamespace === undefined) {
-  		if (schema.attrs && schema.attrs.xmlns) {
-  			domNamespace = schema.attrs.xmlns;
+  		if (xmlns) {
+  			domNamespace = xmlns;
   		} else {
   			switch (nodeName) {
   				case 'svg':
@@ -3339,16 +3232,9 @@
   			}
   		}
   	}
-  	templateNode = domNamespace ? is ? document.createElementNS(domNamespace, nodeName, is) : document.createElementNS(domNamespace, nodeName) : is ? document.createElement(nodeName, is) : document.createElement(nodeName);
 
-  	return {
-  		namespace: domNamespace,
-  		node: templateNode
-  	};
+  	return domNamespace;
   }
-
-  var recyclingEnabled = isRecyclingEnabled();
-  var invalidTemplateError = 'Inferno Error: A valid template node must be returned. You may have returned undefined, an array or some other invalid object.';
 
   function createStaticAttributes(node, domNode, excludeAttrs) {
   	var attrs = node.attrs;
@@ -3369,15 +3255,72 @@
   	}
   }
 
+  /**
+   *  Create static tree node
+   *
+   * @param {Object} node
+   * @param {Object|null} parentNode
+   * @param {String} domNamespace
+   */
+
+  function createStaticTreeNode(node, parentNode, domNamespace) {
+
+  	if (!isVoid(node)) {
+
+  		var domNode = undefined;
+
+  		if (isStringOrNumber(node)) {
+  			domNode = document.createTextNode(node);
+  		} else {
+  			var tag = node.tag;
+  			var text = node.text;
+  			var children = node.children;
+  			var attrs = node.attrs;
+
+  			if (tag) {
+
+  				domNamespace = getNamespace(node, domNamespace, parentNode);
+  				domNode = createElement(node, domNamespace);
+
+  				if (isStringOrNumber(text)) {
+  					domNode.textContent = text;
+  				} else if (!isVoid(children)) {
+  					createStaticTreeChildren(children, domNode, domNamespace);
+  				}
+
+  				if (!isVoid(attrs)) {
+  					createStaticAttributes(node, domNode);
+  				}
+  			} else if (node.text) {
+  				domNode = document.createTextNode(text);
+  			}
+  		}
+
+  		if (domNode) {
+  			if (parentNode) {
+  				parentNode.appendChild(domNode);
+  			} else {
+  				return domNode;
+  			}
+  		}
+  	}
+  }
+
+  /**
+   *  Create static tree children
+   *
+   * @param {Array|String|Number|Object} children
+   * @param {Object|null} parentNode
+   * @param {String} domNamespace
+   */
+
   function createStaticTreeChildren(children, parentNode, domNamespace) {
   	if (isArray(children)) {
   		for (var i = 0; i < children.length; i++) {
   			var childItem = children[i];
 
   			if (isStringOrNumber(childItem)) {
-  				var textNode = document.createTextNode(childItem);
-
-  				parentNode.appendChild(textNode);
+  				parentNode.appendChild(document.createTextNode(childItem));
   			} else {
   				createStaticTreeNode(childItem, parentNode, domNamespace);
   			}
@@ -3391,89 +3334,34 @@
   	}
   }
 
-  function createStaticTreeNode(node, parentNode, domNamespace) {
-  	var staticNode = undefined;
-
-  	if (!isVoid(node)) {
-  		if (isStringOrNumber(node)) {
-  			staticNode = document.createTextNode(node);
-  		} else {
-  			var tag = node.tag;
-
-  			if (tag) {
-  				var Element = createElement(node, domNamespace, parentNode);
-
-  				staticNode = Element.node;
-  				domNamespace = Element.namespace;
-  				var text = node.text;
-  				var children = node.children;
-
-  				if (!isVoid(text)) {
-  					if ("development" !== 'production') {
-  						if (!isVoid(children)) {
-  							throw Error(invalidTemplateError);
-  						}
-  						if (!isStringOrNumber(text)) {
-  							throw Error('Inferno Error: Template nodes with TEXT must only have a StringLiteral or NumericLiteral as a value, this is intended for low-level optimisation purposes.');
-  						}
-  					}
-  					staticNode.textContent = text;
-  				} else {
-  					if (!isVoid(children)) {
-  						createStaticTreeChildren(children, staticNode, domNamespace);
-  					}
-  				}
-  				createStaticAttributes(node, staticNode);
-  			} else if (node.text) {
-  				staticNode = document.createTextNode(node.text);
-  			}
-  		}
-  		if ("development" !== 'production') {
-  			if (staticNode === undefined) {
-  				throw Error(invalidTemplateError);
-  			}
-  		}
-  		if (parentNode === null) {
-  			return staticNode;
-  		} else {
-  			parentNode.appendChild(staticNode);
-  		}
-  	}
-  }
+  var recyclingEnabled = isRecyclingEnabled();
 
   function createDOMTree(schema, isRoot, dynamicNodeMap, domNamespace) {
-  	if ("development" !== 'production') {
-  		if (isVoid(schema)) {
-  			throw Error(invalidTemplateError);
-  		}
-  		if (isArray(schema)) {
-  			throw Error(invalidTemplateError);
-  		}
-  	}
 
   	var dynamicFlags = dynamicNodeMap.get(schema);
+
   	var node = undefined;
   	var templateNode = undefined;
 
   	if (!dynamicFlags) {
   		templateNode = createStaticTreeNode(schema, null, domNamespace, schema);
-  		if ("development" !== 'production') {
-  			if (!templateNode) {
-  				throw Error(invalidTemplateError);
+
+  		if (templateNode) {
+
+  			if (isRoot) {
+  				node = createRootNodes({ node: templateNode, type: ROOT_STATIC_NODE }, recyclingEnabled);
+  			} else {
+  				node = createVoidNode({ node: templateNode, type: STATIC_NODE });
   			}
   		}
-  		if (isRoot) {
-  			node = createRootStaticNode(templateNode, recyclingEnabled);
-  		} else {
-  			node = createStaticNode(templateNode);
-  		}
   	} else {
-  		if (dynamicFlags.NODE === true) {
-  			if (isRoot) {
-  				//		node = createRootDynamicNode( schema.index, domNamespace, recyclingEnabled );
-  			} else {
-  					node = createDynamicNode(schema.index, domNamespace);
-  				}
+  		var TEXT = dynamicFlags.TEXT;
+  		var NODE = dynamicFlags.NODE;
+  		var ATTRS = dynamicFlags.ATTRS;
+  		var CHILDREN = dynamicFlags.CHILDREN;
+
+  		if (NODE === true) {
+  			node = createDynamicNode(schema.index, domNamespace);
   		} else {
   			var tag = schema.tag;
   			var text = schema.text;
@@ -3481,137 +3369,129 @@
   			if (tag) {
   				if (tag.type === ObjectTypes.VARIABLE) {
   					var lastAttrs = schema.attrs;
-  					var _attrs = babelHelpers_extends({}, lastAttrs);
-  					var _children = schema.children;
+  					var attrs = babelHelpers_extends({}, lastAttrs);
+  					var children = schema.children;
 
-  					if (_children) {
-  						if (isArray(_children)) {
-  							if (_children.length > 1) {
-  								_attrs.children = [];
-  								for (var i = 0; i < _children.length; i++) {
-  									var childNode = _children[i];
+  					if (children) {
+  						if (isArray(children)) {
+  							if (children.length > 1) {
+  								attrs.children = [];
+  								for (var i = 0; i < children.length; i++) {
+  									var childNode = children[i];
 
-  									_attrs.children.push(createDOMTree(childNode, false, dynamicNodeMap, domNamespace));
+  									attrs.children.push(createDOMTree(childNode, false, dynamicNodeMap, domNamespace));
   								}
-  							} else if (_children.length === 1) {
-  								_attrs.children = createDOMTree(_children[0], false, dynamicNodeMap, domNamespace);
+  							} else if (children.length === 1) {
+  								attrs.children = createDOMTree(children[0], false, dynamicNodeMap, domNamespace);
   							}
   						} else {
-  							_attrs.children = createDOMTree(_children, false, dynamicNodeMap, domNamespace);
+  							attrs.children = createDOMTree(children, false, dynamicNodeMap, domNamespace);
   						}
   					}
   					if (isRoot) {
-  						return createRootNodeWithComponent(tag.index, _attrs, _children, domNamespace, recyclingEnabled);
+  						return createRootNodeWithComponent(tag.index, attrs, children, domNamespace, recyclingEnabled);
   					} else {
-  						return createNodeWithComponent(tag.index, _attrs, _children, domNamespace);
-  					}
-  				}
-
-  				templateNode = createElement(schema, domNamespace, null).node;
-
-  				var attrs = schema.attrs;
-  				var dynamicAttrs = null;
-
-  				if (!isVoid(attrs)) {
-  					if (dynamicFlags.ATTRS === true) {
-  						dynamicAttrs = attrs;
-  					} else if (dynamicFlags.ATTRS !== false) {
-  						dynamicAttrs = dynamicFlags.ATTRS;
-  						createStaticAttributes(schema, templateNode, dynamicAttrs);
-  					} else {
-  						createStaticAttributes(schema, templateNode);
-  					}
-  				}
-  				var children = schema.children;
-
-  				if (!isVoid(text)) {
-  					if ("development" !== 'production') {
-  						if (!isVoid(children)) {
-  							throw Error('Inferno Error: Template nodes cannot contain both TEXT and a CHILDREN properties, they must only use one or the other.');
-  						}
-  					}
-  					if (dynamicFlags.TEXT === true) {
-  						if (isRoot) {
-  							node = createRootNodeWithDynamicText(templateNode, text.index, dynamicAttrs, recyclingEnabled);
-  						} else {
-  							node = createNodeWithDynamicText(templateNode, text.index, dynamicAttrs);
-  						}
-  					} else {
-  						if (isStringOrNumber(text)) {
-  							templateNode.textContent = text;
-  						} else {
-  							if ("development" !== 'production') {
-  								throw Error('Inferno Error: Template nodes with TEXT must only have a StringLiteral or NumericLiteral as a value, this is intended for low-level optimisation purposes.');
-  							}
-  						}
-  						if (isRoot) {
-  							node = createRootNodeWithStaticChild(templateNode, dynamicAttrs, recyclingEnabled);
-  						} else {
-  							node = createNodeWithStaticChild(templateNode, dynamicAttrs);
-  						}
+  						return createNodeWithComponent(tag.index, attrs, children, domNamespace);
   					}
   				} else {
-  					if (!isVoid(children)) {
-  						if (children.type === ObjectTypes.VARIABLE) {
-  							if (isRoot) {
-  								node = createRootNodeWithDynamicChild(templateNode, children.index, dynamicAttrs, recyclingEnabled);
-  							} else {
-  								node = createNodeWithDynamicChild(templateNode, children.index, dynamicAttrs);
-  							}
-  						} else if (dynamicFlags.CHILDREN === true) {
-  							var subTreeForChildren = [];
 
-  							if ((typeof children === 'undefined' ? 'undefined' : babelHelpers_typeof(children)) === 'object') {
-  								if (isArray(children)) {
-  									for (var i = 0; i < children.length; i++) {
-  										var childItem = children[i];
+  					domNamespace = getNamespace(schema, domNamespace, null);
+  					templateNode = createElement(schema, domNamespace);
 
-  										subTreeForChildren.push(createDOMTree(childItem, false, dynamicNodeMap));
-  									}
-  								} else {
-  									subTreeForChildren = createDOMTree(children, false, dynamicNodeMap);
-  								}
-  							}
+  					var attrs = schema.attrs;
+  					var dynamicAttrs = null;
+
+  					if (!isVoid(attrs)) {
+  						if (ATTRS === true) {
+  							dynamicAttrs = attrs;
+  						} else if (ATTRS !== false) {
+  							dynamicAttrs = ATTRS;
+  							createStaticAttributes(schema, templateNode, dynamicAttrs);
+  						} else {
+  							createStaticAttributes(schema, templateNode);
+  						}
+  					}
+
+  					var children = schema.children;
+
+  					if (!isVoid(text)) {
+
+  						if (dynamicFlags.TEXT === true) {
+
   							if (isRoot) {
-  								node = createRootNodeWithDynamicSubTreeForChildren(templateNode, subTreeForChildren, dynamicAttrs, recyclingEnabled);
+  								node = createDynamicRootNode({ node: templateNode, type: ROOT_WITH_DYNAMIC_TEXT }, text.index, dynamicAttrs, recyclingEnabled);
   							} else {
-  								node = createNodeWithDynamicSubTreeForChildren(templateNode, subTreeForChildren, dynamicAttrs);
-  							}
-  						} else if (isStringOrNumber(children)) {
-  							templateNode.textContent = children;
-  							if (isRoot) {
-  								node = createRootNodeWithStaticChild(templateNode, dynamicAttrs, recyclingEnabled);
-  							} else {
-  								node = createNodeWithStaticChild(templateNode, dynamicAttrs);
+  								node = createNodeWithDynamicText({ node: templateNode, type: DYNAMIC_TEXT_NODE }, text.index, dynamicAttrs);
   							}
   						} else {
-  							var childNodeDynamicFlags = dynamicNodeMap.get(children);
+  							if (isStringOrNumber(text)) {
+  								templateNode.textContent = text;
+  							}
 
-  							if (childNodeDynamicFlags === undefined) {
-  								createStaticTreeChildren(children, templateNode);
-
-  								if (isRoot) {
-  									node = createRootNodeWithStaticChild(templateNode, dynamicAttrs, recyclingEnabled);
-  								} else {
-  									node = createNodeWithStaticChild(templateNode, dynamicAttrs);
-  								}
+  							if (isRoot) {
+  								node = createRootNodes({ node: templateNode, type: ROOT_STATIC_CHILD }, dynamicAttrs, recyclingEnabled);
+  							} else {
+  								node = createNodeWithStaticChild({ node: templateNode }, dynamicAttrs);
   							}
   						}
   					} else {
-  						if (isRoot) {
-  							node = createRootVoidNode(templateNode, dynamicAttrs, recyclingEnabled);
+  						if (!isVoid(children)) {
+  							if (children.type === ObjectTypes.VARIABLE) {
+  								if (isRoot) {
+  									node = createDynamicRootNode({ node: templateNode, type: ROOT_DYNAMIC_CHILD }, children.index, dynamicAttrs, recyclingEnabled);
+  								} else {
+  									node = createNodeWithDynamicText({ node: templateNode, type: DYNAMIC_CHILD_NODE }, children.index, dynamicAttrs);
+  								}
+  							} else if (CHILDREN === true) {
+  								var subTreeForChildren = [];
+
+  								if ((typeof children === 'undefined' ? 'undefined' : babelHelpers_typeof(children)) === 'object') {
+  									if (isArray(children)) {
+  										for (var i = 0; i < children.length; i++) {
+  											var childItem = children[i];
+
+  											subTreeForChildren.push(createDOMTree(childItem, false, dynamicNodeMap));
+  										}
+  									} else {
+  										subTreeForChildren = createDOMTree(children, false, dynamicNodeMap);
+  									}
+  								}
+  								if (isRoot) {
+  									node = createRootNodeWithDynamicSubTreeForChildren({ node: templateNode }, subTreeForChildren, dynamicAttrs, recyclingEnabled);
+  								} else {
+  									node = createNodeWithDynamicSubTreeForChildren({ node: templateNode }, subTreeForChildren, dynamicAttrs);
+  								}
+  							} else if (isStringOrNumber(children)) {
+  								templateNode.textContent = children;
+  								if (isRoot) {
+  									node = createRootNodes({ node: templateNode, type: ROOT_STATIC_CHILD }, dynamicAttrs, recyclingEnabled);
+  								} else {
+  									node = createNodeWithStaticChild({ node: templateNode }, dynamicAttrs);
+  								}
+  							} else {
+  								var childNodeDynamicFlags = dynamicNodeMap.get(children);
+
+  								if (childNodeDynamicFlags === undefined) {
+  									createStaticTreeChildren(children, templateNode);
+
+  									if (isRoot) {
+  										node = createRootNodes({ node: templateNode, type: ROOT_STATIC_CHILD }, dynamicAttrs, recyclingEnabled);
+  									} else {
+  										node = createNodeWithStaticChild({ node: templateNode }, dynamicAttrs);
+  									}
+  								}
+  							}
   						} else {
-  							node = createVoidNode(templateNode, dynamicAttrs);
+  							if (isRoot) {
+  								node = createRootNodes({ node: templateNode, type: ROOT_VOID_NODE }, dynamicAttrs, recyclingEnabled);
+  							} else {
+  								node = createVoidNode({ node: templateNode, type: VOID_NODE }, dynamicAttrs);
+  							}
   						}
   					}
   				}
   			} else if (text) {
-  				templateNode = document.createTextNode('');
-  				// if ( isRoot ) {
-  				node = createRootDynamicTextNode(templateNode, text.index);
-  				// } //else {
-  				//					node = createDynamicTextNode( templateNode, text.index );
-  				//				}
+  				node = createDynamicRootNode({ node: document.createTextNode(''), type: ROOT_DYNAMIC_TEXT }, text.index);
   			}
   		}
   	}

@@ -5,7 +5,7 @@ export default function createNodeWithStaticChild(templateNode, dynamicAttrs) {
 	const node = {
 		overrideItem: null,
 		create(item) {
-			const domNode = templateNode.cloneNode(true);
+			const domNode = templateNode.node.cloneNode(true);
 
 			if (dynamicAttrs) {
 				addDOMDynamicAttributes(item, domNode, dynamicAttrs, null);

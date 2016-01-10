@@ -19,7 +19,7 @@ export default function createRootNodeWithDynamicSubTreeForChildren(templateNode
 					return domNode;
 				}
 			}
-			domNode = templateNode.cloneNode( false );
+			domNode = templateNode.node.cloneNode( false );
 
 			addShapeChildren(domNode, subTreeForChildren, item, treeLifecycle, context );
 

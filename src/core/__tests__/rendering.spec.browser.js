@@ -151,28 +151,6 @@ describe('rendering ( UT tests)', () => {
 		});
 	});
 
-	it('should throw', () => {
-
-		let throwed;
-
-		try {
-			createTemplate(() => ({tag: 'div', text: true}))
-			throwed = false;
-		} catch(e) {
-			throwed = true;
-
-		}
-		expect(throwed).to.equal(true);
-
-		try {
-			createTemplate(() => ({tag: 'div', text: objToString}))
-			throwed = false;
-		} catch(e) {
-			throwed = true;
-		}
-		expect(throwed).to.equal(true);
-
-	});
 
 	definitions = [
 		{
@@ -183,21 +161,6 @@ describe('rendering ( UT tests)', () => {
 		{
 			name: 'null',
 			template: null,
-			expected: ''
-		},
-		{
-			name: 'plain object',
-			template: {},
-			expected: ''
-		},
-		{
-			name: 'json',
-			template: [{}],
-			expected: ''
-		},
-		{
-			name: 'empty array',
-			template: [],
 			expected: ''
 		}
 	];
